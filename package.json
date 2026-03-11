@@ -39,6 +39,6 @@
     "@google-cloud/local-auth": "^3.0.1",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "google-auth-library": "^10.5.0",
-    "googleapis": "^169.0.0"
+    "googleapis": "^171.4.0"
   }
 }

@@ -1,0 +1,26 @@
+# 開発用ディレクトリ・設定
+.github/
+.vscode/
+docs/
+src/
+node_modules/
+
+# 認証・ローカル環境ファイル
+.env
+.env.*
+credentials.json
+token.json
+
+# 開発用設定ファイル
+.editorconfig
+.gitattributes
+.gitignore
+.prettierignore
+.tool-versions
+eslint.config.mjs
+prettier.config.mjs
+tsconfig.json
+
+# その他
+npm-debug.log*
+*.tsbuildinfo

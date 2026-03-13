@@ -1,9 +1,15 @@
 {
-  "name": "google-workspace-mcp-server",
-  "version": "1.0.0",
-  "type": "module",
-  "private": true,
+  "name": "@takiguchi-yu/google-workspace-mcp-server",
+  "version": "0.0.1",
+  "mcpName": "io.github.takiguchi-yu/google-workspace-mcp",
   "workspaces": [],
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takiguchi-yu/google-workspace-mcp.git"
+  },
+  "description": "An MCP server for Google Workspaces.",
+  "type": "module",
   "scripts": {
     "clean-install": "rm -rf node_modules && npm install",
     "setup": "node ./dist/scripts/oauth-server.js",

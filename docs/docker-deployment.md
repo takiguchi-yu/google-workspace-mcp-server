@@ -1,59 +1,88 @@
-# Docker デプロイメントガイド
+# DockerHub デプロイメントガイド（公開向け）
 
-このガイドでは、開発者が Google Workspace MCP サーバーを Docker コンテナとしてレジストリに登録する方法を説明します。
+このガイドでは、Google Workspace MCP サーバーの Docker イメージを DockerHub の Public リポジトリへ公開する手順を説明します。
+
+MCP サーバーを不特定多数が利用できる状態にするには、Private な ECR ではなく Public なレジストリ公開が必要です。
 
 ## 前提条件
 
-- Docker がインストールされていること
-- AWS アカウントへのアクセス権限があること
-- シェル環境: `bash` または `zsh`（macOS のデフォルトシェル）
-
----
+- Docker がインストール済みであること
+- DockerHub アカウントを作成済みであること
+- DockerHub 上に Public リポジトリを作成済みであること
+  - 例: `takiguchiyu/google-workspace-mcp-server`
 
 ## 手順
 
-### 1. AWS 設定（環境変数の設定）
+### 1. DockerHub リポジトリ情報を環境変数に設定
 
-コマンドをコピペで実行できるように、AWS 関連の情報を環境変数として設定します。
-
-```sh
-# AWS 設定を環境変数に設定（実際の値に置き換えてください）
-export AWS_REGION="ap-northeast-1"    # 例: ap-northeast-1
-export AWS_PROFILE="your-profile"     # 例: default
-export AWS_ACCOUNT_ID="123456789012"  # 例: 123456789012
-```
-
-> **注**: これらの値はターミナルセッション中のみ有効です。永続化したい場合は `~/.zshrc` や `~/.bashrc` に追加してください。
-
-### 2. Amazon ECR リポジトリの作成（初回のみ）
+以下の値を自分の DockerHub 情報に置き換えて設定します。
 
 ```sh
-aws ecr create-repository --repository-name google-workspace-mcp --profile $AWS_PROFILE
+export DOCKERHUB_USERNAME="your-dockerhub-username"
+export IMAGE_NAME="google-workspace-mcp-server"
+export IMAGE_TAG="1.0.1"
 ```
+
+`IMAGE_TAG` には `latest` ではなく、リリースバージョン（例: `1.0.1`）を使うことを推奨します。
+
+### 2. DockerHub にログイン
+
+```sh
+docker login
+```
+
+プロンプトに従って DockerHub のユーザー名とパスワード（またはアクセストークン）を入力します。
 
 ### 3. Docker イメージをビルド
 
 ```sh
-docker build --no-cache -t google-workspace-mcp .
+docker build --no-cache -t $IMAGE_NAME:$IMAGE_TAG .
 ```
 
-### 4. Docker イメージをプッシュ
+### 4. DockerHub 向けにタグ付け
 
 ```sh
-# ECR にログイン (Login Succeeded が表示されれば成功)
-aws ecr get-login-password --region $AWS_REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
-# Docker イメージにタグを付けてプッシュ
-docker tag google-workspace-mcp:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/google-workspace-mcp:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/google-workspace-mcp:latest
+docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+docker tag $IMAGE_NAME:$IMAGE_TAG $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
 ```
 
----
-
-## 確認
-
-イメージが正常にプッシュされたか確認するには、以下のコマンドを実行してください：
+### 5. DockerHub にプッシュ
 
 ```sh
-aws ecr describe-images --repository-name google-workspace-mcp --profile $AWS_PROFILE --region $AWS_REGION
+docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
 ```
+
+## 公開確認
+
+### 1. DockerHub 上で確認
+
+以下の URL でイメージが公開されていることを確認します。
+
+```text
+https://hub.docker.com/r/<DOCKERHUB_USERNAME>/<IMAGE_NAME>
+```
+
+### 2. pull テストで確認
+
+別環境またはローカルで以下を実行し、pull できることを確認します。
+
+```sh
+docker pull $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+```
+
+## 更新リリース時の運用
+
+1. `IMAGE_TAG` を新しいバージョンに更新
+2. 再ビルド
+3. バージョンタグと `latest` を再タグ付け
+4. 両方を push
+
+## トラブルシューティング
+
+- `denied: requested access to the resource is denied`
+  - DockerHub にログインできていないか、リポジトリ名が誤っている可能性があります。
+- `repository does not exist`
+  - DockerHub 側で対象リポジトリが未作成、またはリポジトリ名が一致していない可能性があります。
+- 公開したのに pull できない
+  - リポジトリが Private になっていないか確認してください。Public に変更が必要です。

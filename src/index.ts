@@ -47,7 +47,7 @@ const convertToZodSchema = (inputSchema: Record<string, unknown>): Record<string
 async function main() {
   const server = new McpServer({
     name: 'google-workspace-mcp',
-    version: '1.0.0',
+    version: '0.0.1',
   });
 
   try {

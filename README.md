@@ -131,6 +131,12 @@ classDiagram
 
 - [docs/docker-deployment.md](docs/docker-deployment.md)
 
+## 開発者向け： MCP Registry への公開手順
+
+以下のファイルを参照してください：
+
+- [docs/mcp-registry-publish.md](docs/mcp-registry-publish.md)
+
 ## 参考にしたプロジェクト
 
 - [google_workspace_mcp](https://github.com/taylorwilsdon/google_workspace_mcp)

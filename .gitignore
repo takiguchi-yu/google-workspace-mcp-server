@@ -112,3 +112,7 @@ cdk.context.json
 # Google API
 credentials.json
 token.json
+
+# MCP Publisher
+.mcpregistry_github_token
+.mcpregistry_registry_token

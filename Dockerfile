@@ -2,9 +2,9 @@
 FROM node:24-slim AS builder
 WORKDIR /app
 
-# 依存関係のインストール
+# 依存関係のインストール（ci はロックファイルを厳密に使用し再現性を保証）
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # ソースコードをコピーしてビルド
 COPY . .
@@ -23,10 +23,11 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 # OAuth コールバック用ポートを公開
 EXPOSE 8000
 
-# ビルド成果物と本番用依存関係のみをコピー
+# ビルド成果物と依存関係をコピーし、devDependencies を削除
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
-RUN npm install --production
+COPY --from=builder /app/node_modules ./node_modules
+RUN npm prune --production
 
 # デフォルトは MCP サーバー起動
 # setup モード: docker run -it ... npm run setup

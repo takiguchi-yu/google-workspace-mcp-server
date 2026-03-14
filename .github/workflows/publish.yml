@@ -62,9 +62,7 @@ jobs:
         run: npm run build
 
       - name: Publish package to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
 
       # ==========================================
       # 3. MCP Registry へのサーバー公開

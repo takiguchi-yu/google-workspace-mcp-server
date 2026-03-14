@@ -1,6 +1,6 @@
 {
   "name": "@takiguchi-yu/google-workspace-mcp-server",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "mcpName": "io.github.takiguchi-yu/google-workspace-mcp",
   "workspaces": [],
   "license": "ISC",

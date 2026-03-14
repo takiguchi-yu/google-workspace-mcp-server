@@ -12,6 +12,10 @@ RUN npm run build
 
 # --- Production Stage ---
 FROM node:24-slim
+
+# MCP Registry の Ownership Verification 用ラベル
+LABEL io.modelcontextprotocol.server.name="io.github.takiguchi-yu/google-workspace-mcp"
+
 WORKDIR /app
 
 # 環境変数のデフォルト設定（必要に応じて上書き可能）

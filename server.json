@@ -6,12 +6,12 @@
     "url": "https://github.com/takiguchi-yu/google-workspace-mcp-server",
     "source": "github"
   },
-  "version": "0.0.7",
+  "version": "0.0.8",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@takiguchi-yu/google-workspace-mcp-server",
-      "version": "0.0.7",
+      "version": "0.0.8",
       "transport": {
         "type": "stdio"
       }

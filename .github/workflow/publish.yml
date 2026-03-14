@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*" # v1.0.0 などのタグがプッシュされた時に実行
+  workflow_dispatch:
 
 jobs:
   publish:

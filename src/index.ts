@@ -1,13 +1,18 @@
+import * as fs from 'fs/promises';
+import path from 'path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import pkg from '../package.json' with { type: 'json' };
 import { GoogleAuthManager } from './auth/google-auth-manager.js';
 import { ServiceManager } from './manager/service-manager.js';
 import { DriveService } from './tools/drive/drive.service.js';
 import { SheetsService } from './tools/sheets/sheets.service.js';
 import { SlidesService } from './tools/slides/slides.service.js';
 import type { ToolArgs } from './types/mcp.js';
+
+interface PackageJson {
+  version?: string;
+}
 
 /**
  * JSON Schema を Zod スキーマに変換するヘルパー関数
@@ -45,10 +50,32 @@ const convertToZodSchema = (inputSchema: Record<string, unknown>): Record<string
   return zodSchema;
 };
 
+/**
+ * package.json からサーバーバージョンを取得する
+ */
+const loadServerVersion = async (): Promise<string> => {
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+
+  try {
+    const content = await fs.readFile(packageJsonPath, 'utf8');
+    const parsed = JSON.parse(content) as PackageJson;
+
+    if (typeof parsed.version === 'string' && parsed.version.length > 0) {
+      return parsed.version;
+    }
+  } catch {
+    // package.json の読み込みに失敗した場合はフォールバック値を返す
+  }
+
+  return '0.0.0';
+};
+
 async function main() {
+  const version = await loadServerVersion();
+
   const server = new McpServer({
     name: 'google-workspace-mcp-server',
-    version: pkg.version,
+    version,
   });
 
   try {

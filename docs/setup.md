@@ -54,7 +54,7 @@ VS Code の設定ファイル `.vscode/mcp.json` を作成/編集します：
         "~/google-workspace-mcp-server/credentials.json:/app/credentials.json",
         "-v",
         "~/google-workspace-mcp-server/token.json:/app/token.json",
-        "takigu1/google-workspace-mcp-server:0.0.6"
+        "takigu1/google-workspace-mcp-server:0.0.8"
       ]
     }
   }

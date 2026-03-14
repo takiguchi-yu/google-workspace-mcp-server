@@ -64,3 +64,7 @@ src/
 ## 参考にしたプロジェクト
 
 - [google_workspace_mcp](https://github.com/taylorwilsdon/google_workspace_mcp)
+
+## 備忘
+
+https://registry.modelcontextprotocol.io/?q=google-workspace で MCP を検索すると `-server` なしのプロジェクトが見つかるが、初期に登録してしまったものなので、 `unpublish` 的な操作ができるようになったら、そちらは削除する予定。（2026年3月時点では削除ができない。）

@@ -51,21 +51,21 @@ VS Code の設定ファイル `.vscode/mcp.json` を作成/編集します：
         "--rm",
         "-i",
         "-v",
-        "/Users/YOUR_USERNAME/google-workspace-mcp-server/credentials.json:/app/credentials.json",
+        "~/google-workspace-mcp-server/credentials.json:/app/credentials.json",
         "-v",
-        "/Users/YOUR_USERNAME/google-workspace-mcp-server/token.json:/app/token.json",
-        "YOUR_DOCKERHUB_USERNAME/google-workspace-mcp-server:latest"
+        "~/google-workspace-mcp-server/token.json:/app/token.json",
+        "takigu1/google-workspace-mcp-server:0.0.6"
       ]
     }
   }
 }
 ```
 
-> **重要**:
+> **補足**:
 >
-> - `/Users/YOUR_USERNAME/` の部分を実際のホームディレクトリパスに置き換えてください
-> - `YOUR_DOCKERHUB_USERNAME` を実際の DockerHub ユーザー名に置き換えてください
-> - バージョン固定で利用したい場合は `:latest` ではなく `:1.0.1` のようなタグを指定してください
+> - `credentials.json` と `token.json` の保存先は、実際のファイル配置に合わせて変更してください
+> - 利用可能な Docker イメージタグは以下で確認できます
+>   - https://hub.docker.com/r/takigu1/google-workspace-mcp-server/tags
 
 ### 2. 接続確認
 

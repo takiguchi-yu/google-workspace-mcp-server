@@ -28,7 +28,7 @@
 `package.json` の現状値は以下です。
 
 - npm パッケージ名: `@takiguchi-yu/google-workspace-mcp-server`
-- パッケージバージョン: `1.0.1`
+- パッケージバージョン: `0.0.6`
 - mcpName: `io.github.takiguchi-yu/google-workspace-mcp-server`
 - リポジトリ URL: `https://github.com/takiguchi-yu/google-workspace-mcp-server.git`
 
@@ -114,12 +114,12 @@ mcp-publisher init
     "url": "https://github.com/takiguchi-yu/google-workspace-mcp-server.git",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "0.0.6",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@takiguchi-yu/google-workspace-mcp-server",
-      "version": "1.0.1",
+      "version": "0.0.6",
       "transport": {
         "type": "stdio"
       }

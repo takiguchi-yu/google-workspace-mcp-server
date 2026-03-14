@@ -9,7 +9,7 @@ MCP サーバーを不特定多数が利用できる状態にするには、Priv
 - Docker がインストール済みであること
 - DockerHub アカウントを作成済みであること
 - DockerHub 上に Public リポジトリを作成済みであること
-  - 例: `takiguchiyu/google-workspace-mcp-server`
+  - 例: `takigu1/google-workspace-mcp-server`
 
 ## 手順
 
@@ -18,12 +18,12 @@ MCP サーバーを不特定多数が利用できる状態にするには、Priv
 以下の値を自分の DockerHub 情報に置き換えて設定します。
 
 ```sh
-export DOCKERHUB_USERNAME="your-dockerhub-username"
+export DOCKERHUB_USERNAME="takigu1"
 export IMAGE_NAME="google-workspace-mcp-server"
-export IMAGE_TAG="1.0.1"
+export IMAGE_TAG="0.0.6"
 ```
 
-`IMAGE_TAG` には `latest` ではなく、リリースバージョン（例: `1.0.1`）を使うことを推奨します。
+`IMAGE_TAG` には `latest` ではなく、リリースバージョン（例: `0.0.6`）を使うことを推奨します。
 
 ### 2. DockerHub にログイン
 
@@ -60,7 +60,7 @@ docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
 以下の URL でイメージが公開されていることを確認します。
 
 ```text
-https://hub.docker.com/r/<DOCKERHUB_USERNAME>/<IMAGE_NAME>
+https://hub.docker.com/r/takigu1/google-workspace-mcp-server
 ```
 
 ### 2. pull テストで確認

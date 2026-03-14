@@ -29,7 +29,7 @@ touch token.json
 
 ```sh
 # DockerHub から Docker イメージを取得
-docker pull takigu1/google-workspace-mcp-server:0.0.6
+docker pull takigu1/google-workspace-mcp-server:latest
 
 # 利用可能タグ一覧
 # https://hub.docker.com/r/takigu1/google-workspace-mcp-server/tags
@@ -44,7 +44,7 @@ docker run -it --rm \
   -p 8000:8000 \
   -v $(pwd)/credentials.json:/app/credentials.json \
   -v $(pwd)/token.json:/app/token.json \
-  takigu1/google-workspace-mcp-server:0.0.6 \
+  takigu1/google-workspace-mcp-server:latest \
   npm run setup
 ```
 

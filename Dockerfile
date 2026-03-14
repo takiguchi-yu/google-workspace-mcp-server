@@ -14,7 +14,7 @@ RUN npm run build
 FROM node:24-slim
 
 # MCP Registry の Ownership Verification 用ラベル
-LABEL io.modelcontextprotocol.server.name="io.github.takiguchi-yu/google-workspace-mcp"
+LABEL io.modelcontextprotocol.server.name="io.github.takiguchi-yu/google-workspace-mcp-server"
 
 WORKDIR /app
 

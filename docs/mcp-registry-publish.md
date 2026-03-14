@@ -29,8 +29,8 @@
 
 - npm パッケージ名: `@takiguchi-yu/google-workspace-mcp-server`
 - パッケージバージョン: `1.0.1`
-- mcpName: `io.github.takiguchi-yu/google-workspace-mcp`
-- リポジトリ URL: `https://github.com/takiguchi-yu/google-workspace-mcp.git`
+- mcpName: `io.github.takiguchi-yu/google-workspace-mcp-server`
+- リポジトリ URL: `https://github.com/takiguchi-yu/google-workspace-mcp-server.git`
 
 GitHub 認証で公開する場合、`mcpName` は `io.github.<GitHubユーザー名>/` プレフィックスが必須です。
 
@@ -108,10 +108,10 @@ mcp-publisher init
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.takiguchi-yu/google-workspace-mcp",
+  "name": "io.github.takiguchi-yu/google-workspace-mcp-server",
   "description": "An MCP server for Google Workspaces.",
   "repository": {
-    "url": "https://github.com/takiguchi-yu/google-workspace-mcp.git",
+    "url": "https://github.com/takiguchi-yu/google-workspace-mcp-server.git",
     "source": "github"
   },
   "version": "1.0.1",
@@ -149,7 +149,7 @@ mcp-publisher publish
 検索 API でサーバー名を確認します。
 
 ```sh
-curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.takiguchi-yu/google-workspace-mcp"
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.takiguchi-yu/google-workspace-mcp-server"
 ```
 
 レスポンス JSON に対象サーバーが含まれていれば公開完了です。

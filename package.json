@@ -1,12 +1,12 @@
 {
   "name": "@takiguchi-yu/google-workspace-mcp-server",
   "version": "0.0.5",
-  "mcpName": "io.github.takiguchi-yu/google-workspace-mcp",
+  "mcpName": "io.github.takiguchi-yu/google-workspace-mcp-server",
   "workspaces": [],
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/takiguchi-yu/google-workspace-mcp.git"
+    "url": "git+https://github.com/takiguchi-yu/google-workspace-mcp-server.git"
   },
   "description": "An MCP server for Google Workspaces.",
   "type": "module",

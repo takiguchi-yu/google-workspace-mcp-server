@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.takiguchi-yu/google-workspace-mcp",
+  "name": "io.github.takiguchi-yu/google-workspace-mcp-server",
   "description": "An MCP server for Google Workspaces.",
   "repository": {
-    "url": "https://github.com/takiguchi-yu/google-workspace-mcp",
+    "url": "https://github.com/takiguchi-yu/google-workspace-mcp-server",
     "source": "github"
   },
   "version": "0.0.5",

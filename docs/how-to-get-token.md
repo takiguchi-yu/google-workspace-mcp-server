@@ -31,8 +31,8 @@ export AWS_ACCOUNT_ID="123456789012"  # 例: 123456789012
 
 ```sh
 # 任意の作業ディレクトリを作成
-mkdir -p ~/google-workspace-mcp
-cd ~/google-workspace-mcp
+mkdir -p ~/google-workspace-mcp-server
+cd ~/google-workspace-mcp-server
 
 # ダウンロードした credentials.json をこのディレクトリに配置
 # 空の token.json ファイルを作成
@@ -46,19 +46,19 @@ touch token.json
 aws ecr get-login-password --region $AWS_REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 # Docker イメージを取得
-docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/google-workspace-mcp:latest
+docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/google-workspace-mcp-server:latest
 ```
 
 ### 4. トークンの取得
 
 ```sh
-cd ~/google-workspace-mcp
+cd ~/google-workspace-mcp-server
 
 docker run -it --rm \
   -p 8000:8000 \
   -v $(pwd)/credentials.json:/app/credentials.json \
   -v $(pwd)/token.json:/app/token.json \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/google-workspace-mcp:latest \
+  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/google-workspace-mcp-server:latest \
   npm run setup
 ```
 

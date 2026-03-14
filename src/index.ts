@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import pkg from '../package.json' with { type: 'json' };
 import { GoogleAuthManager } from './auth/google-auth-manager.js';
 import { ServiceManager } from './manager/service-manager.js';
 import { DriveService } from './tools/drive/drive.service.js';
@@ -47,7 +48,7 @@ const convertToZodSchema = (inputSchema: Record<string, unknown>): Record<string
 async function main() {
   const server = new McpServer({
     name: 'google-workspace-mcp',
-    version: '0.0.1',
+    version: pkg.version,
   });
 
   try {

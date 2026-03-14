@@ -20,6 +20,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build": "tsc",
+    "sync-version": "node ./scripts/sync-version.js",
+    "version": "npm run sync-version && git add server.json",
     "start": "node ./dist/index.js"
   },
   "simple-git-hooks": {

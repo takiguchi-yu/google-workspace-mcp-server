@@ -9,6 +9,11 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **sheets_list_spreadsheets** - スプレッドシート一覧を取得
 - **sheets_get_spreadsheet_info** - スプレッドシートの詳細情報（シート一覧、プロパティ）を取得
 - **sheets_read_sheet_values** - セル範囲のデータを読み取り
+- **sheets_update_sheet_values** - セル範囲のデータを更新
+- **sheets_create_spreadsheet** - 新規スプレッドシートを作成
+- **sheets_add_sheet** - 既存のスプレッドシートにシートを追加
+- **sheets_append_values** - 既存データの末尾に行を追記
+- **sheets_clear_sheet_values** - 指定範囲のセルの値をクリア
 
 ### 🖼️ Google Slides
 

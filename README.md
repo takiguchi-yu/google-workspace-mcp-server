@@ -14,6 +14,7 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **sheets_add_sheet** - 既存のスプレッドシートにシートを追加
 - **sheets_append_values** - 既存データの末尾に行を追記
 - **sheets_clear_sheet_values** - 指定範囲のセルの値をクリア
+- **sheets_import_csv** - CSV/TSV ファイルをスプレッドシートにインポート（カスタムデリミタ・Base64対応）
 
 ### 🖼️ Google Slides
 
@@ -21,6 +22,13 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **slides_get_presentation** - プレゼンテーションの内容を取得
 - **slides_list_presentations** - プレゼンテーション一覧を取得
 - **slides_get_page** - 特定スライドの詳細情報を取得
+- **slides_update_text_shape** - テキスト要素の内容を更新または追記
+- **slides_add_text_box** - スライドに新しいテキストボックスを追加
+- **slides_delete_element** - スライドの要素（図形、テキストボックス、画像など）を削除
+- **slides_duplicate_slide** - スライドを複製
+- **slides_add_shape** - スライドに図形（矩形、円、矢印など）を追加
+- **slides_update_slide_properties** - スライドのプロパティ（背景色など）を更新
+- **slides_batch_update_presentation** - 複数の更新リクエストをバッチで実行（高度な操作）
 
 ### 📁 Google Drive
 

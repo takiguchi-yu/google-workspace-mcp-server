@@ -64,16 +64,28 @@ export class UpdateSheetValuesCommand implements Command {
       return createErrorResult('range が指定されていません。');
     }
     if (!Array.isArray(args.values)) {
-      return createErrorResult('values が指定されていません。2次元配列で指定してください。');
+      return createErrorResult(
+        'values が指定されていません。2次元配列で指定してください。例: [["A1", "B1"], ["A2", "B2"]]',
+      );
+    }
+    if ((args.values as unknown[]).length === 0) {
+      return createErrorResult('values が空です。最低1行以上のデータが必要です。');
     }
 
-    // values を string[][] に変換
-    const values: string[][] = (args.values as unknown[]).map((row) => {
-      if (!Array.isArray(row)) return [];
-      return (row as unknown[]).map((cell) =>
-        typeof cell === 'string' || typeof cell === 'number' ? String(cell) : '',
+    // values を string[][] に変換、詳細なバリデーション付き
+    let values: string[][];
+    try {
+      values = (args.values as unknown[]).map((row, rowIndex) => {
+        if (!Array.isArray(row)) {
+          throw new Error(`行 ${rowIndex} が配列ではありません。各行は配列で指定してください。`);
+        }
+        return (row as unknown[]).map((cell) => this.convertToString(cell));
+      });
+    } catch (validationError) {
+      return createErrorResult(
+        `values の形式が無効です: ${validationError instanceof Error ? validationError.message : String(validationError)}`,
       );
-    });
+    }
 
     const sheets = google.sheets({ version: 'v4', auth: this.auth });
 
@@ -101,5 +113,28 @@ export class UpdateSheetValuesCommand implements Command {
         `シートデータの更新に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  /**
+   * セルの値を文字列に変換
+   * 複数の型に対応（string、number、boolean、Date など）
+   */
+  private convertToString(cell: unknown): string {
+    if (cell === null || cell === undefined) {
+      return '';
+    }
+    if (typeof cell === 'string') {
+      return cell;
+    }
+    if (typeof cell === 'number' || typeof cell === 'boolean') {
+      return String(cell);
+    }
+    if (cell instanceof Date) {
+      return cell.toISOString();
+    }
+    if (typeof cell === 'object') {
+      return JSON.stringify(cell);
+    }
+    return String(cell);
   }
 }

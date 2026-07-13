@@ -1,6 +1,7 @@
 import { BaseCommandService } from '../base/service.interface.js';
 import { AddSheetCommand } from './commands/add-sheet.command.js';
 import { AppendSheetValuesCommand } from './commands/append-sheet-values.command.js';
+import { BatchUpdateSheetValuesCommand } from './commands/batch-update-sheet-values.command.js';
 import { ClearSheetValuesCommand } from './commands/clear-sheet-values.command.js';
 import { CreateSpreadsheetCommand } from './commands/create-spreadsheet.command.js';
 import { GetSpreadsheetInfoCommand } from './commands/get-spreadsheet-info.command.js';
@@ -22,6 +23,7 @@ export class SheetsService extends BaseCommandService {
     this.registerCommand(new GetSpreadsheetInfoCommand(this.auth));
     this.registerCommand(new ReadSheetValuesCommand(this.auth));
     this.registerCommand(new UpdateSheetValuesCommand(this.auth));
+    this.registerCommand(new BatchUpdateSheetValuesCommand(this.auth));
     this.registerCommand(new CreateSpreadsheetCommand(this.auth));
     this.registerCommand(new AddSheetCommand(this.auth));
     this.registerCommand(new AppendSheetValuesCommand(this.auth));

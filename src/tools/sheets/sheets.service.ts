@@ -4,8 +4,10 @@ import { AppendSheetValuesCommand } from './commands/append-sheet-values.command
 import { BatchUpdateSheetValuesCommand } from './commands/batch-update-sheet-values.command.js';
 import { ClearSheetValuesCommand } from './commands/clear-sheet-values.command.js';
 import { CreateSpreadsheetCommand } from './commands/create-spreadsheet.command.js';
+import { DeleteDimensionCommand } from './commands/delete-dimension.command.js';
 import { GetSpreadsheetInfoCommand } from './commands/get-spreadsheet-info.command.js';
 import { ImportSheetCsvCommand } from './commands/import-sheet-csv.command.js';
+import { InsertDimensionCommand } from './commands/insert-dimension.command.js';
 import { ListSpreadsheetsCommand } from './commands/list-spreadsheets.command.js';
 import { ReadSheetValuesCommand } from './commands/read-sheet-values.command.js';
 import { UpdateSheetValuesCommand } from './commands/update-sheet-values.command.js';
@@ -29,5 +31,7 @@ export class SheetsService extends BaseCommandService {
     this.registerCommand(new AppendSheetValuesCommand(this.auth));
     this.registerCommand(new ClearSheetValuesCommand(this.auth));
     this.registerCommand(new ImportSheetCsvCommand(this.auth));
+    this.registerCommand(new InsertDimensionCommand(this.auth));
+    this.registerCommand(new DeleteDimensionCommand(this.auth));
   }
 }

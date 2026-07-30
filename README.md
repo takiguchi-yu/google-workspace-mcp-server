@@ -15,6 +15,8 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **sheets_append_values** - 既存データの末尾に行を追記
 - **sheets_clear_sheet_values** - 指定範囲のセルの値をクリア
 - **sheets_import_csv** - CSV/TSV ファイルをスプレッドシートにインポート（カスタムデリミタ・Base64対応）
+- **sheets_insert_dimension** - 指定位置に行・列を挿入
+- **sheets_delete_dimension** - 指定範囲の行・列を削除
 
 ### 🖼️ Google Slides
 

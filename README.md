@@ -18,6 +18,10 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **sheets_insert_dimension** - 指定位置に行・列を挿入
 - **sheets_delete_dimension** - 指定範囲の行・列を削除
 
+### 📄 Google Docs
+
+- **docs_get_document** - Google Doc の本文を Markdown 形式で取得（見出し・段落・篇条書き・テーブルに対応）
+
 ### 🖼️ Google Slides
 
 - **slides_create_presentation** - プレゼンテーションを作成

@@ -5,6 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { GoogleAuthManager } from './auth/google-auth-manager.js';
 import { ServiceManager } from './manager/service-manager.js';
+import { DocsService } from './tools/docs/docs.service.js';
 import { DriveService } from './tools/drive/drive.service.js';
 import { SheetsService } from './tools/sheets/sheets.service.js';
 import { SlidesService } from './tools/slides/slides.service.js';
@@ -87,6 +88,7 @@ async function main() {
     serviceManager.registerService('slides', new SlidesService(auth));
     serviceManager.registerService('sheets', new SheetsService(auth));
     serviceManager.registerService('drive', new DriveService(auth));
+    serviceManager.registerService('docs', new DocsService(auth));
 
     // 全サービスからツール定義を取得
     const allTools = serviceManager.getTools();

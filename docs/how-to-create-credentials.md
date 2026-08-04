@@ -24,6 +24,7 @@ Google Workspace を操作するためには、OAuth 認証情報が必要です
 - ✅ Google Sheets API
 - ✅ Google Slides API
 - ✅ Google Drive API
+- ✅ Google Docs API
 
 ## 3. OAuth 同意画面の設定
 

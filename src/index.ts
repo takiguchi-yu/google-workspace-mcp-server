@@ -44,6 +44,12 @@ const convertToZodSchema = (inputSchema: Record<string, unknown>): Record<string
         schema = schema.default(prop.default);
       }
       zodSchema[key] = schema;
+    } else if (prop.type === 'array') {
+      // 要素の型は検証しない。数値・真偽値などを受けても各コマンド側で正規化するため、
+      // ここで厳密に縛るとクライアントからの正当な入力を取りこぼす
+      zodSchema[key] = z.array(z.unknown()).describe(prop.description ?? '');
+    } else if (prop.type === 'object') {
+      zodSchema[key] = z.record(z.string(), z.unknown()).describe(prop.description ?? '');
     }
     // 今後、他の型にも対応可能
   }

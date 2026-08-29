@@ -14,6 +14,8 @@
     "clean-install": "rm -rf node_modules && npm install",
     "setup": "node ./dist/scripts/oauth-server.js",
     "setup:dev": "npm run build && node ./dist/scripts/oauth-server.js",
+    "update-image": "node ./dist/scripts/update-image.js",
+    "update-image:dev": "npm run build && node ./dist/scripts/update-image.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -65,12 +65,21 @@ mv ~/Downloads/client_secret_*.json ~/.google-workspace-mcp/credentials.json
 ### 2. Docker イメージの取得
 
 ```sh
-# DockerHub から Docker イメージを取得
-docker pull takigu1/google-workspace-mcp-server:latest
+# DockerHub から Docker イメージを取得（タグは必ずバージョンを指定する）
+docker pull takigu1/google-workspace-mcp-server:0.4.0
 
 # 利用可能タグ一覧
 # https://hub.docker.com/r/takigu1/google-workspace-mcp-server/tags
 ```
+
+> **`latest` は使わないでください。**
+>
+> `latest` は指す先が黙って変わるため、**今どのバージョンが動いているのか分からなくなります。**
+> 実際、ローカルに `latest` がキャッシュされていると新しいバージョンを公開しても古いイメージのまま動き続け、
+> 「設定は直したのに動かない」という切り分けの難しい状態になります。
+>
+> 以降のコマンドと MCP クライアントの設定では、すべて `:0.4.0` のようにバージョンを明示してください。
+> バージョンを上げるときは、設定ファイルのタグを書き換えることが「適用した」という記録になります。
 
 ### 3. 1 つ目のアカウントを認可する
 
@@ -78,7 +87,7 @@ docker pull takigu1/google-workspace-mcp-server:latest
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:latest \
+  takigu1/google-workspace-mcp-server:0.4.0 \
   npm run setup -- --account work --description "会社の Google Workspace"
 ```
 
@@ -101,7 +110,7 @@ docker run -it --rm \
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:latest \
+  takigu1/google-workspace-mcp-server:0.4.0 \
   npm run setup -- --account private --description "個人の Google アカウント"
 ```
 
@@ -198,7 +207,7 @@ npm run setup -- --account private --port 8123
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:latest \
+  takigu1/google-workspace-mcp-server:0.4.0 \
   npm run setup -- --account work --force
 ```
 

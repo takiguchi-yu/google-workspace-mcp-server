@@ -14,19 +14,21 @@ export interface WorkspaceService {
 
   /**
    * ツール名を指定してコマンドを実行する
+   * @param auth 解決済みの認証クライアント
    */
-  execute(toolName: string, args: ToolArgs): Promise<CallToolResult>;
+  execute(toolName: string, args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult>;
 }
 
 /**
- * コマンドベースの Google Workspace サービスの基底クラス
+ * コマンドベースの Google Workspace サービスの基底クラス。
+ *
+ * 認証クライアントは実行時に渡されるため、サービスもコマンドも保持しない。
+ * これにより、1 つのサービスインスタンスで複数のアカウントを扱える。
  */
 export abstract class BaseCommandService implements WorkspaceService {
-  protected readonly auth: OAuth2Client;
   protected readonly commands = new Map<string, Command>();
 
-  constructor(auth: OAuth2Client) {
-    this.auth = auth;
+  constructor() {
     this.registerCommands();
   }
 
@@ -53,7 +55,7 @@ export abstract class BaseCommandService implements WorkspaceService {
   /**
    * ツール名に対応するコマンドを実行する
    */
-  async execute(toolName: string, args: ToolArgs): Promise<CallToolResult> {
+  async execute(toolName: string, args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const command = this.commands.get(toolName);
 
     if (!command) {
@@ -64,7 +66,7 @@ export abstract class BaseCommandService implements WorkspaceService {
     }
 
     try {
-      return await command.execute(args);
+      return await command.execute(args, auth);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return {

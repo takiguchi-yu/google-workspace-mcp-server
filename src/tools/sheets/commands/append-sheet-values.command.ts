@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スプレッドシートの指定範囲の末尾にデータを追記するコマンド
  */
 export class AppendSheetValuesCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_append_values',
@@ -50,7 +48,7 @@ export class AppendSheetValuesCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
     const range = typeof args.range === 'string' ? args.range : '';
     const valueInputOption =
@@ -88,7 +86,7 @@ export class AppendSheetValuesCommand implements Command {
       );
     }
 
-    const sheets = google.sheets({ version: 'v4', auth: this.auth });
+    const sheets = google.sheets({ version: 'v4', auth });
 
     try {
       const response = await sheets.spreadsheets.values.append({

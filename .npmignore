@@ -24,3 +24,9 @@ tsconfig.json
 # その他
 npm-debug.log*
 *.tsbuildinfo
+
+# ビルド成果物に含まれるテスト
+dist/**/*.test.js
+dist/**/*.test.d.ts
+dist/**/*.test.js.map
+dist/**/*.test.d.ts.map

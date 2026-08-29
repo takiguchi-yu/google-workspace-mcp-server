@@ -1,8 +1,24 @@
 # Google Workspace MCP Server
 
-Google Workspace MCP Server は、GitHub Copilot などの AI アシスタントから Google Workspace サービス（Slides、Sheets、Drive）を操作できるようにする MCP サーバーです。
+Google Workspace MCP Server は、GitHub Copilot などの AI アシスタントから Google Workspace サービス（Slides、Sheets、Docs、Drive）を操作できるようにする MCP サーバーです。
+
+会社用・個人用など、**複数の Google アカウントを 1 つのサーバーで使い分けられます**。
 
 ## 主な機能
+
+### 👤 アカウント
+
+- **accounts_list** - 登録されている Google アカウントの一覧を取得
+
+すべてのツールに `account` 引数があり、`work` `private` のようなラベルで対象アカウントを指定します。省略した場合は既定アカウントが使われます。
+
+アカウントごとに **OAuth**（利用者として認証）と **サービスアカウント**（ブラウザ認可が不要）を選べます。
+
+|                        | OAuth      | サービスアカウント |
+| ---------------------- | ---------- | ------------------ |
+| ブラウザでの認可       | 必要       | 不要               |
+| 既存ファイルの読み書き | Drive 全体 | 共有したものだけ   |
+| 新規ファイルの作成     | 可         | 不可               |
 
 ### 📊 Google Sheets
 
@@ -46,8 +62,16 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 ### 簡単な流れ
 
 1. Google Cloud で OAuth 認証情報（CLIENT_ID, SECRET）を作成（初回のみ）
-2. OAuth 認証情報をもとに Google Workspace の機能を操作するためのトークンを取得（初回のみ）
+2. OAuth 認証情報をもとに、アカウントごとのトークンを取得（アカウントを追加するたび）
 3. GitHub Copilot で使用開始
+
+```sh
+# 会社アカウントを登録
+npm run setup -- --account work --description "会社の Google Workspace"
+
+# 個人アカウントを登録
+npm run setup -- --account private --description "個人の Google アカウント"
+```
 
 詳細なセットアップ手順は **[docs/setup.md](docs/setup.md)** を参照してください。
 
@@ -56,17 +80,38 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 ```
 src/
 ├── index.ts                # MCP サーバー起動
-├── auth/                   # OAuth 認証管理
-├── manager/                # サービス統合管理
+├── auth/                   # アカウント設定・トークン・OAuth クライアントの解決
+├── manager/                # サービス統合管理と account 引数の取り回し
 └── tools/                  # Google Workspace ツール実装
+    ├── accounts/
     ├── sheets/
     ├── slides/
+    ├── docs/
     └── drive/
 ```
+
+設定とトークンは 1 つのディレクトリにまとまります。
+
+```
+~/.google-workspace-mcp/
+├── accounts.json           # アカウント一覧と既定アカウント
+├── credentials.json        # 全アカウントで共有する OAuth クライアント
+└── accounts/
+    ├── work/token.json                 # OAuth のトークン
+    └── private/service-account.json    # サービスアカウントの鍵
+```
+
+用語の定義は [CONTEXT.md](CONTEXT.md) を参照してください。
 
 ## 開発者向け： クラス設計
 
 [docs/class-diagram.md](docs/class-diagram.md)
+
+## 開発者向け： テスト
+
+```sh
+npm test    # ビルドしたうえで認証・アカウント解決層のテストを実行
+```
 
 ## 開発者向け： Docker コンテナのデプロイメント方法
 

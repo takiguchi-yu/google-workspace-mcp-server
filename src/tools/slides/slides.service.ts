@@ -20,16 +20,16 @@ export class SlidesService extends BaseCommandService {
    * Slides サービスが提供するすべてのコマンドを登録
    */
   protected registerCommands(): void {
-    this.registerCommand(new CreatePresentationCommand(this.auth));
-    this.registerCommand(new GetPresentationCommand(this.auth));
-    this.registerCommand(new ListPresentationsCommand(this.auth));
-    this.registerCommand(new GetPageCommand(this.auth));
-    this.registerCommand(new UpdateTextShapeCommand(this.auth));
-    this.registerCommand(new AddTextBoxCommand(this.auth));
-    this.registerCommand(new DeleteElementCommand(this.auth));
-    this.registerCommand(new DuplicateSlideCommand(this.auth));
-    this.registerCommand(new AddShapeCommand(this.auth));
-    this.registerCommand(new UpdateSlidePropertiesCommand(this.auth));
-    this.registerCommand(new BatchUpdatePresentationCommand(this.auth));
+    this.registerCommand(new CreatePresentationCommand());
+    this.registerCommand(new GetPresentationCommand());
+    this.registerCommand(new ListPresentationsCommand());
+    this.registerCommand(new GetPageCommand());
+    this.registerCommand(new UpdateTextShapeCommand());
+    this.registerCommand(new AddTextBoxCommand());
+    this.registerCommand(new DeleteElementCommand());
+    this.registerCommand(new DuplicateSlideCommand());
+    this.registerCommand(new AddShapeCommand());
+    this.registerCommand(new UpdateSlidePropertiesCommand());
+    this.registerCommand(new BatchUpdatePresentationCommand());
   }
 }

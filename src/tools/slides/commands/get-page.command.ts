@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * プレゼンテーション内の特定スライドの詳細情報を取得するコマンド
  */
 export class GetPageCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_get_page',
@@ -32,7 +30,7 @@ export class GetPageCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
 
@@ -43,7 +41,7 @@ export class GetPageCommand implements Command {
       return createErrorResult('pageObjectId が指定されていません。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       const response = await slides.presentations.pages.get({

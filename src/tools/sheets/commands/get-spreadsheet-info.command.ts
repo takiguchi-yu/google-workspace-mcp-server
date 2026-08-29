@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スプレッドシートの詳細情報を取得するコマンド
  */
 export class GetSpreadsheetInfoCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_get_spreadsheet_info',
@@ -28,13 +26,13 @@ export class GetSpreadsheetInfoCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
     if (spreadsheetId === '') {
       return createErrorResult('spreadsheetId が指定されていません。');
     }
 
-    const sheets = google.sheets({ version: 'v4', auth: this.auth });
+    const sheets = google.sheets({ version: 'v4', auth });
 
     try {
       const response = await sheets.spreadsheets.get({

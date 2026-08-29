@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * Google Drive からプレゼンテーション一覧を取得するコマンド
  */
 export class ListPresentationsCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_list_presentations',
@@ -29,10 +27,10 @@ export class ListPresentationsCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const maxResults = typeof args.maxResults === 'number' ? args.maxResults : 25;
 
-    const drive = google.drive({ version: 'v3', auth: this.auth });
+    const drive = google.drive({ version: 'v3', auth });
 
     try {
       const response = await drive.files.list({

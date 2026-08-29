@@ -21,17 +21,17 @@ export class SheetsService extends BaseCommandService {
    * Sheets サービスが提供するすべてのコマンドを登録
    */
   protected registerCommands(): void {
-    this.registerCommand(new ListSpreadsheetsCommand(this.auth));
-    this.registerCommand(new GetSpreadsheetInfoCommand(this.auth));
-    this.registerCommand(new ReadSheetValuesCommand(this.auth));
-    this.registerCommand(new UpdateSheetValuesCommand(this.auth));
-    this.registerCommand(new BatchUpdateSheetValuesCommand(this.auth));
-    this.registerCommand(new CreateSpreadsheetCommand(this.auth));
-    this.registerCommand(new AddSheetCommand(this.auth));
-    this.registerCommand(new AppendSheetValuesCommand(this.auth));
-    this.registerCommand(new ClearSheetValuesCommand(this.auth));
-    this.registerCommand(new ImportSheetCsvCommand(this.auth));
-    this.registerCommand(new InsertDimensionCommand(this.auth));
-    this.registerCommand(new DeleteDimensionCommand(this.auth));
+    this.registerCommand(new ListSpreadsheetsCommand());
+    this.registerCommand(new GetSpreadsheetInfoCommand());
+    this.registerCommand(new ReadSheetValuesCommand());
+    this.registerCommand(new UpdateSheetValuesCommand());
+    this.registerCommand(new BatchUpdateSheetValuesCommand());
+    this.registerCommand(new CreateSpreadsheetCommand());
+    this.registerCommand(new AddSheetCommand());
+    this.registerCommand(new AppendSheetValuesCommand());
+    this.registerCommand(new ClearSheetValuesCommand());
+    this.registerCommand(new ImportSheetCsvCommand());
+    this.registerCommand(new InsertDimensionCommand());
+    this.registerCommand(new DeleteDimensionCommand());
   }
 }

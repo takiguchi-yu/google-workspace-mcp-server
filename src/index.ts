@@ -3,8 +3,9 @@ import path from 'path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { GoogleAuthManager } from './auth/google-auth-manager.js';
+import { AccountRegistry } from './auth/account-registry.js';
 import { ServiceManager } from './manager/service-manager.js';
+import { ListAccountsCommand } from './tools/accounts/commands/list-accounts.command.js';
 import { DocsService } from './tools/docs/docs.service.js';
 import { DriveService } from './tools/drive/drive.service.js';
 import { SheetsService } from './tools/sheets/sheets.service.js';
@@ -17,41 +18,51 @@ interface PackageJson {
 
 /**
  * JSON Schema を Zod スキーマに変換するヘルパー関数
+ *
+ * required に含まれないプロパティは省略可能として扱う。account 引数のように
+ * 「渡さなければ既定の動作をする」引数を表現するために必要。
  */
 const convertToZodSchema = (inputSchema: Record<string, unknown>): Record<string, z.ZodType> => {
-  const properties = inputSchema.properties as Record<
+  const properties = (inputSchema.properties ?? {}) as Record<
     string,
     { type: string; description?: string; default?: string | number | boolean }
   >;
+  const required = new Set((inputSchema.required as string[] | undefined) ?? []);
   const zodSchema: Record<string, z.ZodType> = {};
 
   for (const [key, prop] of Object.entries(properties)) {
+    let schema: z.ZodType | null = null;
+
     if (prop.type === 'string') {
-      let schema: z.ZodType = z.string().describe(prop.description ?? '');
-      if (prop.default !== undefined && typeof prop.default === 'string') {
+      schema = z.string().describe(prop.description ?? '');
+      if (typeof prop.default === 'string') {
         schema = schema.default(prop.default);
       }
-      zodSchema[key] = schema;
     } else if (prop.type === 'number') {
-      let schema: z.ZodType = z.number().describe(prop.description ?? '');
-      if (prop.default !== undefined && typeof prop.default === 'number') {
+      schema = z.number().describe(prop.description ?? '');
+      if (typeof prop.default === 'number') {
         schema = schema.default(prop.default);
       }
-      zodSchema[key] = schema;
     } else if (prop.type === 'boolean') {
-      let schema: z.ZodType = z.boolean().describe(prop.description ?? '');
-      if (prop.default !== undefined && typeof prop.default === 'boolean') {
+      schema = z.boolean().describe(prop.description ?? '');
+      if (typeof prop.default === 'boolean') {
         schema = schema.default(prop.default);
       }
-      zodSchema[key] = schema;
     } else if (prop.type === 'array') {
       // 要素の型は検証しない。数値・真偽値などを受けても各コマンド側で正規化するため、
       // ここで厳密に縛るとクライアントからの正当な入力を取りこぼす
-      zodSchema[key] = z.array(z.unknown()).describe(prop.description ?? '');
+      schema = z.array(z.unknown()).describe(prop.description ?? '');
     } else if (prop.type === 'object') {
-      zodSchema[key] = z.record(z.string(), z.unknown()).describe(prop.description ?? '');
+      schema = z.record(z.string(), z.unknown()).describe(prop.description ?? '');
     }
     // 今後、他の型にも対応可能
+
+    if (schema === null) {
+      continue;
+    }
+
+    // 既定値を持つスキーマはそれ自体が省略可能なので、二重に optional にしない
+    zodSchema[key] = required.has(key) || prop.default !== undefined ? schema : schema.optional();
   }
 
   return zodSchema;
@@ -86,15 +97,15 @@ async function main() {
   });
 
   try {
-    const authManager = new GoogleAuthManager();
-    const auth = await authManager.getAuth();
+    // 読み込むのは設定だけ。認証クライアントは対象アカウントが初めて使われたときに作る
+    const accounts = await AccountRegistry.load();
 
-    // サービスを登録
-    const serviceManager = new ServiceManager();
-    serviceManager.registerService('slides', new SlidesService(auth));
-    serviceManager.registerService('sheets', new SheetsService(auth));
-    serviceManager.registerService('drive', new DriveService(auth));
-    serviceManager.registerService('docs', new DocsService(auth));
+    const serviceManager = new ServiceManager(accounts);
+    serviceManager.registerMetaCommand(new ListAccountsCommand(accounts));
+    serviceManager.registerService('slides', new SlidesService());
+    serviceManager.registerService('sheets', new SheetsService());
+    serviceManager.registerService('drive', new DriveService());
+    serviceManager.registerService('docs', new DocsService());
 
     // 全サービスからツール定義を取得
     const allTools = serviceManager.getTools();
@@ -116,6 +127,12 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
 
+    const registered = accounts.list();
+    console.error(
+      registered.length === 0
+        ? '⚠️  No Google accounts are registered yet. Run: npm run setup -- --account <label>'
+        : `🔑 Registered accounts: ${registered.map((account) => account.label).join(', ')}`,
+    );
     console.error('🚀 Google Workspace MCP Server is running');
   } catch (error) {
     console.error('❌ Failed to start MCP Server:', error);

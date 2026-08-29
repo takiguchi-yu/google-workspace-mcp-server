@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * Google Slides プレゼンテーションを新規作成するコマンド
  */
 export class CreatePresentationCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_create_presentation',
@@ -28,11 +26,11 @@ export class CreatePresentationCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     // 引数のバリデーション
     const title = typeof args.title === 'string' ? args.title : 'Untitled Presentation';
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       // API 呼び出し

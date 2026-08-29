@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * Google Slides プレゼンテーションの内容を取得するコマンド
  */
 export class GetPresentationCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_get_presentation',
@@ -28,14 +26,14 @@ export class GetPresentationCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     // 引数のバリデーション
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     if (presentationId === '') {
       return createErrorResult('presentationId が指定されていません。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       // API 呼び出し

@@ -19,6 +19,10 @@ LABEL io.modelcontextprotocol.server.name="io.github.takiguchi-yu/google-workspa
 WORKDIR /app
 
 # 環境変数のデフォルト設定（必要に応じて上書き可能）
+# 設定とトークンの置き場所。ホストの ~/.google-workspace-mcp をここにマウントする
+ENV GOOGLE_WORKSPACE_MCP_HOME=/app/.google-workspace-mcp
+# 旧レイアウト（単一アカウント）との互換用。これらのファイルが存在する場合だけ
+# default アカウントとして自動的に取り込まれる
 ENV GOOGLE_CREDENTIALS_PATH=/app/credentials.json
 ENV GOOGLE_TOKEN_PATH=/app/token.json
 # 自己署名証明書環境向け（本番環境では0に設定しないこと）

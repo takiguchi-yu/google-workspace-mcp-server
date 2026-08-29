@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スライドのプロパティを更新するコマンド
  */
 export class UpdateSlidePropertiesCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_update_slide_properties',
@@ -44,7 +42,7 @@ export class UpdateSlidePropertiesCommand implements Command {
     return { red, green, blue };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
     const backgroundColor = typeof args.backgroundColor === 'string' ? args.backgroundColor : '';
@@ -60,7 +58,7 @@ export class UpdateSlidePropertiesCommand implements Command {
       return createErrorResult('最低限、backgroundColor を指定してください。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       const requests = [];

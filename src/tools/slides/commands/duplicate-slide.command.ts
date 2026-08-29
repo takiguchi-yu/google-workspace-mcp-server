@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スライドを複製するコマンド
  */
 export class DuplicateSlideCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_duplicate_slide',
@@ -37,7 +35,7 @@ export class DuplicateSlideCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
     const insertIndex = typeof args.insertIndex === 'number' ? args.insertIndex : -1;
@@ -49,7 +47,7 @@ export class DuplicateSlideCommand implements Command {
       return createErrorResult('pageObjectId が指定されていません。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       // まずプレゼンテーション情報を取得してスライドのインデックスを確認

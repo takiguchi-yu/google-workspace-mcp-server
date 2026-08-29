@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スライドに新しいテキストボックスを追加するコマンド
  */
 export class AddTextBoxCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_add_text_box',
@@ -56,7 +54,7 @@ export class AddTextBoxCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
     const text = typeof args.text === 'string' ? args.text : '';
@@ -75,7 +73,7 @@ export class AddTextBoxCommand implements Command {
       return createErrorResult('text が指定されていません。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       const shapeObjectId = `textbox_${Date.now()}`;

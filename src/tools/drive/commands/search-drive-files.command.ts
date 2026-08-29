@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * Google Drive でファイルを検索するコマンド
  */
 export class SearchDriveFilesCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'drive_search_files',
@@ -35,7 +33,7 @@ export class SearchDriveFilesCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const query = typeof args.query === 'string' ? args.query : '';
     const maxResults = typeof args.maxResults === 'number' ? args.maxResults : 20;
 
@@ -43,7 +41,7 @@ export class SearchDriveFilesCommand implements Command {
       return createErrorResult('query が指定されていません。');
     }
 
-    const drive = google.drive({ version: 'v3', auth: this.auth });
+    const drive = google.drive({ version: 'v3', auth });
 
     try {
       // クエリがDrive API構文かどうかを判定

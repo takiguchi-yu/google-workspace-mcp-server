@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * プレゼンテーションに複数の更新リクエストをバッチで実行するコマンド
  */
 export class BatchUpdatePresentationCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_batch_update_presentation',
@@ -38,7 +36,7 @@ export class BatchUpdatePresentationCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const requestsArg = args.requests;
 
@@ -55,7 +53,7 @@ export class BatchUpdatePresentationCommand implements Command {
     // requests を any[] として型を緩和（ユーザーが任意の Google Slides API リクエストを渡せるように）
     const requests = requestsArg as unknown[];
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

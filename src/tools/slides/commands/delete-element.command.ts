@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スライド内の要素を削除するコマンド
  */
 export class DeleteElementCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_delete_element',
@@ -36,7 +34,7 @@ export class DeleteElementCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
     const elementObjectId = typeof args.elementObjectId === 'string' ? args.elementObjectId : '';
@@ -51,7 +49,7 @@ export class DeleteElementCommand implements Command {
       return createErrorResult('elementObjectId が指定されていません。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       const requests = [

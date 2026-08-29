@@ -11,7 +11,7 @@ export class DriveService extends BaseCommandService {
    * Drive サービスが提供するすべてのコマンドを登録
    */
   protected registerCommands(): void {
-    this.registerCommand(new SearchDriveFilesCommand(this.auth));
-    this.registerCommand(new ListDriveItemsCommand(this.auth));
+    this.registerCommand(new SearchDriveFilesCommand());
+    this.registerCommand(new ListDriveItemsCommand());
   }
 }

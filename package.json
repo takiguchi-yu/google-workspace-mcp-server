@@ -13,7 +13,7 @@
   "scripts": {
     "clean-install": "rm -rf node_modules && npm install",
     "setup": "node ./dist/scripts/oauth-server.js",
-    "setup:dev": "node ./src/scripts/oauth-server.ts",
+    "setup:dev": "npm run build && node ./dist/scripts/oauth-server.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -22,10 +22,11 @@
     "build": "tsc",
     "sync-version": "node ./scripts/sync-version.js",
     "version": "npm run sync-version && git add server.json",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "test": "npm run build && node --test \"dist/**/*.test.js\""
   },
   "simple-git-hooks": {
-    "pre-commit": "npm run type-check && npm run lint && npm run format:check"
+    "pre-commit": "npm run type-check && npm run lint && npm run format:check && npm test"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.5",

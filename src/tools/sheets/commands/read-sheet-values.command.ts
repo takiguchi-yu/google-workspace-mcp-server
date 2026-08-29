@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スプレッドシートのセル範囲のデータを読み取るコマンド
  */
 export class ReadSheetValuesCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_read_sheet_values',
@@ -33,7 +31,7 @@ export class ReadSheetValuesCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
     const range = typeof args.range === 'string' ? args.range : 'A1:Z1000';
 
@@ -41,7 +39,7 @@ export class ReadSheetValuesCommand implements Command {
       return createErrorResult('spreadsheetId が指定されていません。');
     }
 
-    const sheets = google.sheets({ version: 'v4', auth: this.auth });
+    const sheets = google.sheets({ version: 'v4', auth });
 
     try {
       const response = await sheets.spreadsheets.values.get({

@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * 既存のスプレッドシートに新しいシートを追加するコマンド
  */
 export class AddSheetCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_add_sheet',
@@ -32,7 +30,7 @@ export class AddSheetCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
     const title = typeof args.title === 'string' ? args.title : '';
 
@@ -43,7 +41,7 @@ export class AddSheetCommand implements Command {
       return createErrorResult('title が指定されていません。');
     }
 
-    const sheets = google.sheets({ version: 'v4', auth: this.auth });
+    const sheets = google.sheets({ version: 'v4', auth });
 
     try {
       const response = await sheets.spreadsheets.batchUpdate({

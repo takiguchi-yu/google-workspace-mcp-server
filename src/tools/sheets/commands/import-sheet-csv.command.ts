@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * CSV ファイルをスプレッドシートにインポートするコマンド
  */
 export class ImportSheetCsvCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_import_csv',
@@ -108,7 +106,7 @@ export class ImportSheetCsvCommand implements Command {
     return rows;
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
     let csvContent = typeof args.csvContent === 'string' ? args.csvContent : '';
     const isBase64 = args.isBase64 === true;
@@ -154,7 +152,7 @@ export class ImportSheetCsvCommand implements Command {
       return createErrorResult('CSV に有効なデータが含まれていません。');
     }
 
-    const sheets = google.sheets({ version: 'v4', auth: this.auth });
+    const sheets = google.sheets({ version: 'v4', auth });
 
     try {
       const response = await sheets.spreadsheets.values.update({

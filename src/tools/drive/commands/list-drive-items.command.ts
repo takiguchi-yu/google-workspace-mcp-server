@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * Google Drive のフォルダ内のファイル一覧を取得するコマンド
  */
 export class ListDriveItemsCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'drive_list_items',
@@ -34,11 +32,11 @@ export class ListDriveItemsCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const folderId = typeof args.folderId === 'string' ? args.folderId : 'root';
     const maxResults = typeof args.maxResults === 'number' ? args.maxResults : 100;
 
-    const drive = google.drive({ version: 'v3', auth: this.auth });
+    const drive = google.drive({ version: 'v3', auth });
 
     try {
       const response = await drive.files.list({

@@ -10,6 +10,6 @@ export class DocsService extends BaseCommandService {
    * Docs サービスが提供するすべてのコマンドを登録
    */
   protected registerCommands(): void {
-    this.registerCommand(new GetDocumentCommand(this.auth));
+    this.registerCommand(new GetDocumentCommand());
   }
 }

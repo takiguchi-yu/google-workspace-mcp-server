@@ -113,6 +113,13 @@ cdk.context.json
 credentials.json
 token.json
 
+# 複数アカウントの設定・トークン・鍵（リポジトリ直下を作業場所にした場合）
+/.google-workspace-mcp/
+/accounts.json
+/accounts/
+service-account.json
+*-service-account.json
+
 # MCP Publisher
 .mcpregistry_github_token
 .mcpregistry_registry_token

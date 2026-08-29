@@ -202,8 +202,6 @@ const convertDocumentToMarkdown = (document: docs_v1.Schema$Document): string =>
  * Google Doc の本文を Markdown 形式で取得するコマンド
  */
 export class GetDocumentCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'docs_get_document',
@@ -223,7 +221,7 @@ export class GetDocumentCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const rawDocumentId = typeof args.documentId === 'string' ? args.documentId : '';
 
     if (rawDocumentId === '') {
@@ -231,7 +229,7 @@ export class GetDocumentCommand implements Command {
     }
 
     const documentId = extractDocumentId(rawDocumentId);
-    const docs = google.docs({ version: 'v1', auth: this.auth });
+    const docs = google.docs({ version: 'v1', auth });
 
     try {
       const response = await docs.documents.get({ documentId });

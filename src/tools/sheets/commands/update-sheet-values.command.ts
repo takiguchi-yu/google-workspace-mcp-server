@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * スプレッドシートの指定範囲のセルを更新するコマンド
  */
 export class UpdateSheetValuesCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_update_sheet_values',
@@ -49,7 +47,7 @@ export class UpdateSheetValuesCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
     const range = typeof args.range === 'string' ? args.range : '';
     const valueInputOption =
@@ -87,7 +85,7 @@ export class UpdateSheetValuesCommand implements Command {
       );
     }
 
-    const sheets = google.sheets({ version: 'v4', auth: this.auth });
+    const sheets = google.sheets({ version: 'v4', auth });
 
     try {
       const response = await sheets.spreadsheets.values.update({

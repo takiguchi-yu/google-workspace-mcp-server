@@ -9,8 +9,6 @@ import { createErrorResult } from '../../base/command.interface.js';
  * テキスト要素（シェイプ）の内容を更新するコマンド
  */
 export class UpdateTextShapeCommand implements Command {
-  constructor(private readonly auth: OAuth2Client) {}
-
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_update_text_shape',
@@ -45,7 +43,7 @@ export class UpdateTextShapeCommand implements Command {
     };
   }
 
-  async execute(args: ToolArgs): Promise<CallToolResult> {
+  async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
     const elementObjectId = typeof args.elementObjectId === 'string' ? args.elementObjectId : '';
@@ -65,7 +63,7 @@ export class UpdateTextShapeCommand implements Command {
       return createErrorResult('text が指定されていません。');
     }
 
-    const slides = google.slides({ version: 'v1', auth: this.auth });
+    const slides = google.slides({ version: 'v1', auth });
 
     try {
       const requests = appendText

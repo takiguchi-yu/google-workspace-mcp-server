@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { startRowOf } from '../a1-range.js';
 
 /**
  * スプレッドシートのセル範囲のデータを読み取るコマンド
@@ -12,7 +13,8 @@ export class ReadSheetValuesCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
       name: 'sheets_read_sheet_values',
-      description: 'Reads values from a specific range in a Google Sheet.',
+      description:
+        'Reads values from a specific range in a Google Sheet. Row numbers in the output are the actual row numbers in the sheet, not offsets within the range.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -55,6 +57,10 @@ export class ReadSheetValuesCommand implements Command {
         };
       }
 
+      // 出力する行番号はシート上の実際の行を指す。レスポンスの range は実際に読まれた範囲なので、
+      // リクエストの range を自前で解析するより開始行の特定が確実
+      const startRow = startRowOf(response.data.range ?? range);
+
       // データを整形して表示
       let result = `範囲 "${range}" のデータを取得しました (${String(values.length)} 行):\n\n`;
 
@@ -64,8 +70,8 @@ export class ReadSheetValuesCommand implements Command {
       for (let i = 0; i < values.length; i++) {
         const row = values[i] as unknown;
         if (Array.isArray(row)) {
-          // 行番号を追加
-          const rowNum = i + 1;
+          // シート上の実際の行番号を添える
+          const rowNum = startRow + i;
           const cells = Array.from({ length: maxColumns }, (_, j) => {
             const cell = row[j] as unknown;
             return typeof cell === 'string' || typeof cell === 'number' ? String(cell) : '';

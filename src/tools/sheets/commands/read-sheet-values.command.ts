@@ -5,6 +5,7 @@ import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
 import { startRowOf } from '../a1-range.js';
+import { sheetsErrorMessage } from '../sheets-error.js';
 
 /**
  * スプレッドシートのセル範囲のデータを読み取るコマンド
@@ -85,7 +86,7 @@ export class ReadSheetValuesCommand implements Command {
       };
     } catch (error) {
       return createErrorResult(
-        `シートデータの読み取りに失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+        `シートデータの読み取りに失敗しました: ${await sheetsErrorMessage(error, sheets, spreadsheetId)}`,
       );
     }
   }

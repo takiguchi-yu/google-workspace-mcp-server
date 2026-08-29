@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { sheetsErrorMessage } from '../sheets-error.js';
 
 /**
  * スプレッドシートの複数の範囲を一度に更新するコマンド
@@ -149,7 +150,7 @@ export class BatchUpdateSheetValuesCommand implements Command {
       };
     } catch (error) {
       return createErrorResult(
-        `シートデータのバッチ更新に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+        `シートデータのバッチ更新に失敗しました: ${await sheetsErrorMessage(error, sheets, spreadsheetId)}`,
       );
     }
   }

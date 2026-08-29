@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { sheetsErrorMessage } from '../sheets-error.js';
 
 /**
  * CSV ファイルをスプレッドシートにインポートするコマンド
@@ -177,7 +178,7 @@ export class ImportSheetCsvCommand implements Command {
       };
     } catch (error) {
       return createErrorResult(
-        `CSV のインポートに失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+        `CSV のインポートに失敗しました: ${await sheetsErrorMessage(error, sheets, spreadsheetId)}`,
       );
     }
   }

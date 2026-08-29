@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { sheetsErrorMessage } from '../sheets-error.js';
 
 /**
  * スプレッドシートの指定範囲のセルをクリアするコマンド
@@ -61,7 +62,7 @@ export class ClearSheetValuesCommand implements Command {
         ],
       };
     } catch (error) {
-      return createErrorResult(`セルのクリアに失敗しました: ${error instanceof Error ? error.message : String(error)}`);
+      return createErrorResult(`セルのクリアに失敗しました: ${await sheetsErrorMessage(error, sheets, spreadsheetId)}`);
     }
   }
 }

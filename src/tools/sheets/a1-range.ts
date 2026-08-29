@@ -2,7 +2,8 @@
  * A1 記法の範囲を読むためのヘルパー。
  *
  * Sheets API の範囲は `'シート名'!K186:N602` / `K186:N602` / `Sheet1!A:C` のように
- * 表記の揺れが大きい。ここでは「その範囲がシートの何行目から始まるか」だけを扱う。
+ * 表記の揺れが大きい。解析はこのモジュールの `splitRange` 1 箇所に閉じ、
+ * 外へはシート名と開始行という「知りたいこと」だけを見せる。
  */
 
 /**
@@ -24,7 +25,7 @@ export const startRowOf = (range: string | null | undefined): number => {
     return 1;
   }
 
-  const cellReference = stripSheetName(range.trim());
+  const { cellReference } = splitRange(range.trim());
   const startCell = cellReference.split(':')[0] ?? '';
   const row = CELL_REFERENCE_PATTERN.exec(startCell)?.[1];
 
@@ -32,21 +33,47 @@ export const startRowOf = (range: string | null | undefined): number => {
 };
 
 /**
- * 範囲からシート名の部分を取り除き、セル参照の部分だけを返す。
- * シート名がクォートされている場合は、名前に含まれる `!` や `''`（エスケープされた `'`）を考慮する。
+ * 範囲が指しているシート名を返す。セル参照だけの範囲や、シート名を特定できない場合は null。
+ *
+ * @param range A1 記法の範囲
  */
-const stripSheetName = (range: string): string => {
+export const sheetNameOf = (range: string | null | undefined): string | null => {
+  if (typeof range !== 'string') {
+    return null;
+  }
+
+  return splitRange(range.trim()).sheetName;
+};
+
+/**
+ * 範囲をシート名の部分とセル参照の部分に分ける。
+ *
+ * シート名がクォートされている場合はクォートを外し、名前に含まれる `!` や
+ * エスケープされた `''` を考慮する。シート名を特定できなければ sheetName は null。
+ */
+const splitRange = (range: string): { sheetName: string | null; cellReference: string } => {
   if (range.startsWith("'")) {
     const closingQuote = findClosingQuote(range);
-    if (closingQuote === -1) {
-      return '';
+    if (closingQuote === -1 || !range.slice(closingQuote + 1).startsWith('!')) {
+      return { sheetName: null, cellReference: '' };
     }
-    const rest = range.slice(closingQuote + 1);
-    return rest.startsWith('!') ? rest.slice(1) : '';
+
+    const quoted = range.slice(1, closingQuote);
+    return {
+      sheetName: quoted === '' ? null : quoted.replaceAll("''", "'"),
+      cellReference: range.slice(closingQuote + 2),
+    };
   }
 
   const separator = range.indexOf('!');
-  return separator === -1 ? range : range.slice(separator + 1);
+  if (separator === -1) {
+    return { sheetName: null, cellReference: range };
+  }
+
+  return {
+    sheetName: separator === 0 ? null : range.slice(0, separator),
+    cellReference: range.slice(separator + 1),
+  };
 };
 
 /** クォートされたシート名の閉じクォートの位置を返す。見つからなければ -1 */

@@ -9,19 +9,13 @@ import { WorkspacePaths } from './workspace-paths.js';
 
 let workDir: string;
 let paths: WorkspacePaths;
-const savedEnv = { ...process.env };
 
 beforeEach(async () => {
   workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'accounts-config-'));
   paths = new WorkspacePaths(path.join(workDir, 'home'));
-
-  // 旧レイアウトの探索先を、実行ディレクトリではなくテスト用の場所に固定する
-  process.env.GOOGLE_CREDENTIALS_PATH = path.join(workDir, 'legacy', 'credentials.json');
-  process.env.GOOGLE_TOKEN_PATH = path.join(workDir, 'legacy', 'token.json');
 });
 
 afterEach(async () => {
-  process.env = { ...savedEnv };
   await fs.rm(workDir, { recursive: true, force: true });
 });
 
@@ -30,13 +24,8 @@ const writeConfig = async (content: unknown): Promise<void> => {
   await fs.writeFile(paths.configPath, JSON.stringify(content, null, 2));
 };
 
-const writeLegacyToken = async (): Promise<void> => {
-  await fs.mkdir(path.join(workDir, 'legacy'), { recursive: true });
-  await fs.writeFile(path.join(workDir, 'legacy', 'token.json'), JSON.stringify({ refresh_token: 'r1' }));
-};
-
 describe('AccountsConfig.load', () => {
-  it('設定も旧レイアウトも無ければ空になる', async () => {
+  it('accounts.json が無ければ空になる', async () => {
     const config = await AccountsConfig.load(paths);
 
     assert.deepEqual(config.labels(), []);
@@ -89,32 +78,6 @@ describe('AccountsConfig.load', () => {
 
   it('書式が不正なラベルのエントリは読み飛ばす', async () => {
     await writeConfig({ accounts: { work: {}, '../evil': {} } });
-
-    assert.deepEqual((await AccountsConfig.load(paths)).labels(), ['work']);
-  });
-
-  it('accounts.json が無く旧レイアウトのトークンがあれば default として取り込む', async () => {
-    await writeLegacyToken();
-
-    const config = await AccountsConfig.load(paths);
-    const definition = config.get(AccountLabel.parse('default'));
-
-    assert.deepEqual(config.labels(), ['default']);
-    assert.equal(config.defaultLabel()?.value, 'default');
-    assert.equal(definition?.tokenPath, process.env.GOOGLE_TOKEN_PATH);
-    assert.equal(definition?.credentialsPath, process.env.GOOGLE_CREDENTIALS_PATH);
-  });
-
-  it('旧レイアウトのトークンが空ファイルなら取り込まない', async () => {
-    await fs.mkdir(path.join(workDir, 'legacy'), { recursive: true });
-    await fs.writeFile(path.join(workDir, 'legacy', 'token.json'), '');
-
-    assert.deepEqual((await AccountsConfig.load(paths)).labels(), []);
-  });
-
-  it('accounts.json があれば旧レイアウトは見ない', async () => {
-    await writeLegacyToken();
-    await writeConfig({ accounts: { work: {} } });
 
     assert.deepEqual((await AccountsConfig.load(paths)).labels(), ['work']);
   });

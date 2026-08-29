@@ -1,15 +1,7 @@
 import * as fs from 'fs/promises';
 import path from 'path';
 import { AccountLabel } from './account-label.js';
-import { TokenStore } from './token-store.js';
 import type { WorkspacePaths } from './workspace-paths.js';
-
-/** 旧レイアウト（単一アカウント時代）で使われていた環境変数 */
-const LEGACY_CREDENTIALS_ENV = 'GOOGLE_CREDENTIALS_PATH';
-const LEGACY_TOKEN_ENV = 'GOOGLE_TOKEN_PATH';
-
-/** 旧レイアウトを取り込むときに割り当てるラベル */
-export const LEGACY_ACCOUNT_LABEL = 'default';
 
 /** accounts.json の 1 アカウント分のエントリ */
 interface AccountEntryFile {
@@ -55,33 +47,10 @@ const readConfigFile = async (configPath: string): Promise<AccountsConfigFile | 
 };
 
 /**
- * 旧レイアウトのアカウントを探す。
- *
- * 環境変数（未設定なら実行ディレクトリ）が指すトークンファイルに中身がある場合だけ、
- * 既存利用者が設定を書き換えずにバージョンアップできるよう default アカウントとして取り込む。
- * ドキュメントが `touch token.json` を案内していた経緯があるため、空ファイルは対象外とする。
- */
-const detectLegacyAccount = async (): Promise<AccountDefinition | null> => {
-  const credentialsPath = process.env[LEGACY_CREDENTIALS_ENV] ?? path.join(process.cwd(), 'credentials.json');
-  const tokenPath = process.env[LEGACY_TOKEN_ENV] ?? path.join(process.cwd(), 'token.json');
-
-  if (!(await new TokenStore(tokenPath).exists())) {
-    return null;
-  }
-
-  return {
-    label: AccountLabel.parse(LEGACY_ACCOUNT_LABEL),
-    description: 'Imported from the single-account layout',
-    credentialsPath,
-    tokenPath,
-  };
-};
-
-/**
  * 登録されているアカウントの一覧と、どれが既定かを保持するクラス。
  *
- * accounts.json があればそれが唯一の真実。無い場合にかぎり旧レイアウトを取り込む。
- * OAuth クライアントやトークンの中身には触れず、「どのアカウントが在るか」だけを扱う。
+ * accounts.json が唯一の真実。OAuth クライアントやトークンの中身には触れず、
+ * 「どのアカウントが在るか」だけを扱う。
  */
 export class AccountsConfig {
   private readonly definitions: Map<string, AccountDefinition>;
@@ -96,14 +65,7 @@ export class AccountsConfig {
     const file = await readConfigFile(paths.configPath);
 
     if (file === null) {
-      const legacy = await detectLegacyAccount();
-      const definitions = new Map<string, AccountDefinition>();
-
-      if (legacy !== null) {
-        definitions.set(legacy.label.value, legacy);
-      }
-
-      return new AccountsConfig(definitions, null);
+      return new AccountsConfig(new Map(), null);
     }
 
     const definitions = new Map<string, AccountDefinition>();

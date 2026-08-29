@@ -66,7 +66,7 @@ mv ~/Downloads/client_secret_*.json ~/.google-workspace-mcp/credentials.json
 
 ```sh
 # DockerHub から Docker イメージを取得（タグは必ずバージョンを指定する）
-docker pull takigu1/google-workspace-mcp-server:0.4.0
+docker pull takigu1/google-workspace-mcp-server:0.5.0
 
 # 利用可能タグ一覧
 # https://hub.docker.com/r/takigu1/google-workspace-mcp-server/tags
@@ -78,7 +78,7 @@ docker pull takigu1/google-workspace-mcp-server:0.4.0
 > 実際、ローカルに `latest` がキャッシュされていると新しいバージョンを公開しても古いイメージのまま動き続け、
 > 「設定は直したのに動かない」という切り分けの難しい状態になります。
 >
-> 以降のコマンドと MCP クライアントの設定では、すべて `:0.4.0` のようにバージョンを明示してください。
+> 以降のコマンドと MCP クライアントの設定では、すべて `:0.5.0` のようにバージョンを明示してください。
 > バージョンを上げるときは、設定ファイルのタグを書き換えることが「適用した」という記録になります。
 
 ### 3. 1 つ目のアカウントを認可する
@@ -87,7 +87,7 @@ docker pull takigu1/google-workspace-mcp-server:0.4.0
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:0.4.0 \
+  takigu1/google-workspace-mcp-server:0.5.0 \
   npm run setup -- --account work --description "会社の Google Workspace"
 ```
 
@@ -110,7 +110,7 @@ docker run -it --rm \
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:0.4.0 \
+  takigu1/google-workspace-mcp-server:0.5.0 \
   npm run setup -- --account private --description "個人の Google アカウント"
 ```
 
@@ -207,7 +207,7 @@ npm run setup -- --account private --port 8123
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:0.4.0 \
+  takigu1/google-workspace-mcp-server:0.5.0 \
   npm run setup -- --account work --force
 ```
 
@@ -215,27 +215,31 @@ docker run -it --rm \
 
 ## 以前のバージョンから移行する
 
-単一アカウント時代の `credentials.json` / `token.json` をマウントしている場合、**設定を書き換えなくてもそのまま動きます**。
-それらは `default` というラベルのアカウント 1 件として自動的に読み込まれます。
+単一アカウント時代の `credentials.json` / `token.json` を個別にマウントしている場合、**0.5.0 以降ではそのままでは動きません。**
+アカウントは `accounts.json` に登録されているものだけが読み込まれます。
 
-新しいレイアウトへ移すには、次のようにファイルを移動してください。
+次のようにファイルを移動してください。ラベル（ここでは `work`）は自分が分かる名前で構いません。
 
 ```sh
-mkdir -p ~/.google-workspace-mcp/accounts/default
+mkdir -p ~/.google-workspace-mcp/accounts/work
 cp <既存の credentials.json> ~/.google-workspace-mcp/credentials.json
-cp <既存の token.json>       ~/.google-workspace-mcp/accounts/default/token.json
+cp <既存の token.json>       ~/.google-workspace-mcp/accounts/work/token.json
 
 cat > ~/.google-workspace-mcp/accounts.json <<'JSON'
 {
-  "defaultAccount": "default",
-  "accounts": { "default": {} }
+  "defaultAccount": "work",
+  "accounts": { "work": {} }
 }
 JSON
 ```
 
-移行したら、MCP クライアントの設定から旧ファイルのマウントを外してください。
+移行したら、MCP クライアントの設定を、旧ファイルの個別マウントからホームディレクトリ 1 つのマウントに置き換えてください。
 
-> `accounts.json` が存在する場合、旧レイアウトのファイルは参照されません。
+```diff
+- "-v", "<既存のディレクトリ>/credentials.json:/app/credentials.json",
+- "-v", "<既存のディレクトリ>/token.json:/app/token.json",
++ "-v", "$HOME/.google-workspace-mcp:/app/.google-workspace-mcp",
+```
 
 ---
 

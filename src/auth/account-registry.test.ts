@@ -32,10 +32,6 @@ const SERVICE_ACCOUNT_KEY = JSON.stringify({
 beforeEach(async () => {
   workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'account-registry-'));
   paths = new WorkspacePaths(path.join(workDir, 'home'));
-
-  // 旧レイアウトの取り込みがテスト結果に混ざらないよう、存在しない場所を指しておく
-  process.env.GOOGLE_CREDENTIALS_PATH = path.join(workDir, 'absent', 'credentials.json');
-  process.env.GOOGLE_TOKEN_PATH = path.join(workDir, 'absent', 'token.json');
 });
 
 afterEach(async () => {

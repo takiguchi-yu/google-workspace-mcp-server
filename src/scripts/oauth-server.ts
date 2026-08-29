@@ -20,7 +20,7 @@ import * as url from 'url';
 import type { Credentials } from 'google-auth-library';
 import { google } from 'googleapis';
 import { AccountLabel } from '../auth/account-label.js';
-import { LEGACY_ACCOUNT_LABEL, upsertAccount } from '../auth/accounts-config.js';
+import { upsertAccount } from '../auth/accounts-config.js';
 import { readCredential } from '../auth/credentials.js';
 import type { Credential, CredentialsConfig, OAuthClientCredential } from '../auth/credentials.js';
 import { OAUTH_SCOPES, SERVICE_ACCOUNT_SCOPES } from '../auth/scopes.js';
@@ -50,13 +50,11 @@ interface SetupOptions {
 interface ResolvedCredential {
   credential: Credential;
   sourcePath: string;
-  /** 規約上の位置ではないため、accounts.json に記録すべきパス */
-  explicitPath?: string | undefined;
 }
 
 /**
  * コマンドライン引数を読む。
- * --account を省いた場合は default とし、旧来の単一アカウント手順をそのまま使えるようにする。
+ * どのアカウントを認可するかは取り違えの元なので、--account は必須にする。
  */
 const parseOptions = (argv: string[]): SetupOptions => {
   const readValue = (flag: string): string | undefined => {
@@ -64,8 +62,12 @@ const parseOptions = (argv: string[]): SetupOptions => {
     return index >= 0 ? argv[index + 1] : undefined;
   };
 
-  const rawLabel = readValue('--account') ?? LEGACY_ACCOUNT_LABEL;
+  const rawLabel = readValue('--account');
   const rawPort = readValue('--port');
+
+  if (rawLabel === undefined || rawLabel === '') {
+    throw new Error('--account でアカウントのラベルを指定してください（例: --account work）。');
+  }
 
   if (rawPort !== undefined && !/^\d+$/.test(rawPort)) {
     throw new Error(`--port には 1〜65535 の数値を指定してください（受け取った値: ${rawPort}）。`);
@@ -88,34 +90,26 @@ const parseOptions = (argv: string[]): SetupOptions => {
 
 /**
  * このアカウントで使う OAuth クライアントを探す。
- *
- * アカウント専用 → 全アカウント共通 → 旧レイアウト、の順に見る。
- * 旧レイアウトが採用された場合だけ、そのパスを accounts.json に記録する必要がある。
+ * アカウント専用 → 全アカウント共通、の順に規約上の位置だけを見る。
  */
 const resolveCredential = async (paths: WorkspacePaths, label: AccountLabel): Promise<ResolvedCredential> => {
-  const legacyPath = process.env.GOOGLE_CREDENTIALS_PATH ?? path.join(process.cwd(), 'credentials.json');
   const candidates = [
-    { path: paths.accountServiceAccountPath(label), isConventional: true },
-    { path: paths.accountCredentialsPath(label), isConventional: true },
-    { path: paths.sharedCredentialsPath, isConventional: true },
-    { path: legacyPath, isConventional: false },
+    paths.accountServiceAccountPath(label),
+    paths.accountCredentialsPath(label),
+    paths.sharedCredentialsPath,
   ];
 
-  for (const candidate of candidates) {
-    const credential = await readCredential(candidate.path);
+  for (const candidatePath of candidates) {
+    const credential = await readCredential(candidatePath);
 
     if (credential !== null) {
-      return {
-        credential,
-        sourcePath: candidate.path,
-        explicitPath: candidate.isConventional ? undefined : candidate.path,
-      };
+      return { credential, sourcePath: candidatePath };
     }
   }
 
   throw new Error(
     `資格情報が見つかりません。次のいずれかに配置してください:\n` +
-      candidates.map((candidate) => `  - ${candidate.path}`).join('\n') +
+      candidates.map((candidatePath) => `  - ${candidatePath}`).join('\n') +
       `\n作成手順: docs/how-to-create-credentials.md`,
   );
 };
@@ -395,12 +389,7 @@ const listenOnAvailablePort = async (
  * 認証完了後の保存処理。
  * トークンとアカウント設定の両方を書くことで、利用者が accounts.json を手書きせずに済む。
  */
-const persistAccount = async (
-  paths: WorkspacePaths,
-  options: SetupOptions,
-  credentials: ResolvedCredential,
-  tokens: Credentials,
-): Promise<void> => {
+const persistAccount = async (paths: WorkspacePaths, options: SetupOptions, tokens: Credentials): Promise<void> => {
   const store = new TokenStore(paths.accountTokenPath(options.label));
 
   console.log('💾 トークンを保存しています...');
@@ -410,7 +399,6 @@ const persistAccount = async (
   await upsertAccount(paths, {
     label: options.label,
     description: options.description,
-    credentialsPath: credentials.explicitPath,
   });
   console.log(`✅ アカウント設定を更新しました: ${paths.configPath}`);
 };
@@ -592,7 +580,7 @@ const startServer = async (): Promise<void> => {
         console.log('\n🔄 認証コードをトークンに交換しています...');
         const tokens = await exchangeCodeForToken(oauthCredential.config, redirectUri, code);
 
-        await persistAccount(paths, options, credentials, tokens);
+        await persistAccount(paths, options, tokens);
         await testToken(oauthCredential.config, redirectUri, tokens);
 
         console.log('\n╔═══════════════════════════════════════════════════════════╗');

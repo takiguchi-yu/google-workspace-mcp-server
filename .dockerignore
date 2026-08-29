@@ -3,6 +3,15 @@ dist
 npm-debug.log
 .git
 .env
+
+# 増分ビルドのキャッシュ。dist を除外しているため、これが残っていると
+# tsc が「ビルド済み」と誤判定して dist を出力しなくなる
+*.tsbuildinfo
+
 # 認証情報はマウントするのでイメージには含めない
 credentials.json
 token.json
+.google-workspace-mcp/
+accounts.json
+accounts/
+service-account.json

@@ -106,3 +106,28 @@ Starting an object on a scalar field
 
 新ツールの検証が先に進まないため、この 3 点を直した。直したあとは
 `add_text_box` → `update_text_style`、`add_shape` → `update_shape_style` が通るようになった。
+
+## 0.6.1 のリリース
+
+スライドの既存バグ修正を 0.6.1 として出した。npm / Docker Hub / MCP Registry すべてに反映済み
+（`npm view` が `latest: 0.6.1`、Registry の検索 API が `0.6.1 isLatest=true`）。
+
+publish ワークフローは今回も MCP Registry で落ちたが、**原因は 0.6.0 のときとは別**だった。
+
+- 0.6.0: npm への反映前に Registry が検証して 404 → 反映待ちステップを足して解決。
+  0.6.1 のログでは 12 回目（約 2 分）で反映を検知し、意図どおり通過した。
+- 0.6.1: Registry 側が npm へ問い合わせる HTTP がタイムアウトして 400
+  （`failed to fetch package metadata from NPM: ... context deadline exceeded`）。
+  こちらでは防げない一過性の失敗なので、`mcp-publisher publish` を 30 秒おきに 5 回まで
+  やり直すようにした。0.7.0 以降のリリースで効く。
+
+どちらの回もローカルの `mcp-publisher` で登録を済ませた。なお `gh run rerun --failed` は
+`Must have admin rights to Repository` で使えなかったので、ジョブの再実行には頼れない。
+
+## 申し送り（追加）
+
+- **既存ツールの実機点検が済んでいない。** 今回 `slides_add_text_box` / `slides_add_shape` が
+  丸ごと壊れていたことが分かった以上、残りの既存ツールにも同種の誤りがある可能性がある。
+  同じやり方（ビルド済みコマンドを直接呼ぶ）で一巡させる価値がある。
+- **Registry 登録の JWT は短命。** ローカルから登録するときは、その都度
+  `mcp-publisher login github` の device flow が要る。

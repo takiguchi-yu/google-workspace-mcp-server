@@ -140,6 +140,35 @@ classDiagram
         +execute() Promise~CallToolResult~
     }
 
+    class FormatCellsCommand {
+        +getToolDefinition() ToolDefinition
+        +execute(args, auth) Promise~CallToolResult~
+    }
+
+    %% 書式のヘルパー（純粋な変換と API 呼び出しを分ける）
+    class GridRange {
+        <<module>>
+        +toGridIndexes(range) GridIndexes
+        +toA1Range(indexes, sheetTitle) string
+    }
+
+    class CellFormat {
+        <<module>>
+        +toCellFormat(args) CellFormatResult
+    }
+
+    class Color {
+        <<module>>
+        +hexToRgb(hex) RgbColor
+    }
+
+    class SheetIds {
+        <<interface>>
+        +of(range) number
+        +byTitle(title) number
+        +titles: string[]
+    }
+
     %% 関係性
     AccountRegistry o-- AccountsConfig : reads
     AccountRegistry o-- WorkspacePaths : resolves paths with
@@ -158,6 +187,12 @@ classDiagram
     MetaCommand <|.. ListAccountsCommand : implements
     ListAccountsCommand ..> AccountRegistry : lists
 
+    Command <|.. FormatCellsCommand : implements
+    FormatCellsCommand ..> GridRange : converts range with
+    FormatCellsCommand ..> CellFormat : builds format with
+    FormatCellsCommand ..> SheetIds : resolves sheetId with
+    CellFormat ..> Color : converts color with
+
     note for AccountLabel "値オブジェクト\n（書式を検証済み）"
     note for AccountRegistry "レジストリ\n（遅延生成・キャッシュ）"
     note for TokenStore "原子的書き込み\n（temp + rename）"
@@ -166,16 +201,22 @@ classDiagram
     note for BaseCommandService "テンプレートメソッド"
     note for SheetsService "ストラテジー"
     note for ListSpreadsheetsCommand "コマンド\n（auth を保持しない）"
+    note for FormatCellsCommand "書式コマンド\n（ヘルパーに委ねる）"
+    note for GridRange "純粋な変換\n（API を知らない）"
+    note for Color "Sheets と Slides で共用"
+    note for SheetIds "シート一覧を 1 度だけ引く"
 ```
 
 > **Note**: 図は代表的なクラスのみを表示しています。実際には Slides/Docs/Drive サービスや各種コマンドクラスも同様のパターンで実装されています。
 
 ## 設計上の判断
 
-| 判断                                                 | 理由                                                                                                                              |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `account` をコマンドではなく `ServiceManager` が扱う | コマンドを増やしたときの `account` の書き忘れを構造的に防ぐため                                                                   |
-| サーバーを分けず 1 プロセスで複数アカウントを持つ    | ツール定義がアカウント数に比例して増えず、アカウントを跨ぐ操作も 1 セッションで完結するため                                       |
-| クライアントを起動時ではなく初回使用時に生成する     | 1 アカウントのトークン失効で全アカウントが使えなくなるのを防ぐため                                                                |
-| ラベルを主キーにし、メールアドレスを保持しない       | 引数・ファイル名・ログ・エラー文面に個人情報が載らないようにするため                                                              |
-| スコープをアカウントごとに変えられるようにしない     | 実際に困っていない段階で設定と分岐を複雑化させないため（必要になれば `accounts.json` に任意項目を足せば後方互換のまま拡張できる） |
+| 判断                                                   | 理由                                                                                                                                   |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `account` をコマンドではなく `ServiceManager` が扱う   | コマンドを増やしたときの `account` の書き忘れを構造的に防ぐため                                                                        |
+| サーバーを分けず 1 プロセスで複数アカウントを持つ      | ツール定義がアカウント数に比例して増えず、アカウントを跨ぐ操作も 1 セッションで完結するため                                            |
+| クライアントを起動時ではなく初回使用時に生成する       | 1 アカウントのトークン失効で全アカウントが使えなくなるのを防ぐため                                                                     |
+| ラベルを主キーにし、メールアドレスを保持しない         | 引数・ファイル名・ログ・エラー文面に個人情報が載らないようにするため                                                                   |
+| スコープをアカウントごとに変えられるようにしない       | 実際に困っていない段階で設定と分岐を複雑化させないため（必要になれば `accounts.json` に任意項目を足せば後方互換のまま拡張できる）      |
+| 書式ツールの範囲を A1 記法に統一し、sheetId を毎回引く | 利用者と AI が読み書きするのは A1 記法であり、行列番号を外に出さないため（[ADR 0001](./adr/0001-a1-notation-for-formatting-range.md)） |
+| 色を 16 進数で受け、変換を 1 モジュールに集約する      | Sheets と Slides で同じ変換が重複していたため。`src/tools/shared/color.ts` に集約した                                                  |

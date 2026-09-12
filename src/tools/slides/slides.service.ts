@@ -7,9 +7,13 @@ import { DeleteElementCommand } from './commands/delete-element.command.js';
 import { DuplicateSlideCommand } from './commands/duplicate-slide.command.js';
 import { GetPageCommand } from './commands/get-page.command.js';
 import { GetPresentationCommand } from './commands/get-presentation.command.js';
+import { InsertImageCommand } from './commands/insert-image.command.js';
 import { ListPresentationsCommand } from './commands/list-presentations.command.js';
+import { ReplaceAllTextCommand } from './commands/replace-all-text.command.js';
+import { UpdateShapeStyleCommand } from './commands/update-shape-style.command.js';
 import { UpdateSlidePropertiesCommand } from './commands/update-slide-properties.command.js';
 import { UpdateTextShapeCommand } from './commands/update-text-shape.command.js';
+import { UpdateTextStyleCommand } from './commands/update-text-style.command.js';
 
 /**
  * Google Slides サービス
@@ -31,5 +35,9 @@ export class SlidesService extends BaseCommandService {
     this.registerCommand(new AddShapeCommand());
     this.registerCommand(new UpdateSlidePropertiesCommand());
     this.registerCommand(new BatchUpdatePresentationCommand());
+    this.registerCommand(new UpdateTextStyleCommand());
+    this.registerCommand(new UpdateShapeStyleCommand());
+    this.registerCommand(new InsertImageCommand());
+    this.registerCommand(new ReplaceAllTextCommand());
   }
 }

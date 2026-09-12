@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { hexToRgb } from '../../shared/color.js';
 
 /**
  * スライドに図形を追加するコマンド
@@ -87,14 +88,6 @@ export class AddShapeCommand implements Command {
     };
   }
 
-  private hexToRgb(hex: string): { red: number; green: number; blue: number } {
-    const cleanHex = hex.replace(/^#/, '');
-    const red = parseInt(cleanHex.substring(0, 2), 16) / 255;
-    const green = parseInt(cleanHex.substring(2, 4), 16) / 255;
-    const blue = parseInt(cleanHex.substring(4, 6), 16) / 255;
-    return { red, green, blue };
-  }
-
   async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
@@ -134,7 +127,7 @@ export class AddShapeCommand implements Command {
 
       // Fill color の設定
       if (fillColor) {
-        const rgb = this.hexToRgb(fillColor);
+        const rgb = hexToRgb(fillColor);
         shapeProperties.shapeBackgroundFill = {
           solidFill: {
             color: {
@@ -145,7 +138,7 @@ export class AddShapeCommand implements Command {
       }
 
       // Stroke (border) の設定
-      const strokeRgb = this.hexToRgb(strokeColor);
+      const strokeRgb = hexToRgb(strokeColor);
       shapeProperties.outline = {
         color: {
           rgbColor: strokeRgb,

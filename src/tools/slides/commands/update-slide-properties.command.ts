@@ -4,6 +4,7 @@ import { google } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { hexToRgb } from '../../shared/color.js';
 
 /**
  * スライドのプロパティを更新するコマンド
@@ -34,14 +35,6 @@ export class UpdateSlidePropertiesCommand implements Command {
     };
   }
 
-  private hexToRgb(hex: string): { red: number; green: number; blue: number } {
-    const cleanHex = hex.replace(/^#/, '');
-    const red = parseInt(cleanHex.substring(0, 2), 16) / 255;
-    const green = parseInt(cleanHex.substring(2, 4), 16) / 255;
-    const blue = parseInt(cleanHex.substring(4, 6), 16) / 255;
-    return { red, green, blue };
-  }
-
   async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const presentationId = typeof args.presentationId === 'string' ? args.presentationId : '';
     const pageObjectId = typeof args.pageObjectId === 'string' ? args.pageObjectId : '';
@@ -65,7 +58,7 @@ export class UpdateSlidePropertiesCommand implements Command {
 
       // Background color の更新
       if (backgroundColor) {
-        const rgb = this.hexToRgb(backgroundColor);
+        const rgb = hexToRgb(backgroundColor);
         requests.push({
           updatePageProperties: {
             objectId: pageObjectId,

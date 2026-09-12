@@ -46,6 +46,20 @@ export const sheetNameOf = (range: string | null | undefined): string | null => 
 };
 
 /**
+ * 範囲からセル参照の部分（`A1:D10` や `B:D`）だけを返す。シート名は取り除く。
+ * セル参照を含まない範囲（シート名だけの指定）では空文字になる。
+ *
+ * @param range A1 記法の範囲
+ */
+export const cellReferenceOf = (range: string | null | undefined): string => {
+  if (typeof range !== 'string') {
+    return '';
+  }
+
+  return splitRange(range.trim()).cellReference;
+};
+
+/**
  * 範囲をシート名の部分とセル参照の部分に分ける。
  *
  * シート名がクォートされている場合はクォートを外し、名前に含まれる `!` や

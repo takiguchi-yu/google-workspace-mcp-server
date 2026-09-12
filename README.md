@@ -26,6 +26,7 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **sheets_get_spreadsheet_info** - スプレッドシートの詳細情報（シート一覧、プロパティ）を取得
 - **sheets_read_sheet_values** - セル範囲のデータを読み取り
 - **sheets_update_sheet_values** - セル範囲のデータを更新
+- **sheets_batch_update_sheet_values** - 複数のセル範囲を一度に更新
 - **sheets_create_spreadsheet** - 新規スプレッドシートを作成
 - **sheets_add_sheet** - 既存のスプレッドシートにシートを追加
 - **sheets_append_values** - 既存データの末尾に行を追記
@@ -33,6 +34,14 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **sheets_import_csv** - CSV/TSV ファイルをスプレッドシートにインポート（カスタムデリミタ・Base64対応）
 - **sheets_insert_dimension** - 指定位置に行・列を挿入
 - **sheets_delete_dimension** - 指定範囲の行・列を削除
+- **sheets_format_cells** - セルの塗り・文字色・太字・サイズ・配置・数値書式を変更（範囲ごとにまとめて指定）
+- **sheets_set_borders** - セル範囲に罫線を引く・消す（外周と内側を個別に指定可）
+- **sheets_merge_cells** - セルを結合・解除（MERGE_ALL / MERGE_COLUMNS / MERGE_ROWS / UNMERGE）
+- **sheets_resize_dimension** - 列幅・行高をピクセル指定または内容に合わせて自動調整
+- **sheets_freeze_panes** - 先頭の行・列を固定（見出し行の固定）
+- **sheets_add_conditional_format** - 条件付き書式のルールを追加（条件による色分け／カラースケール）
+- **sheets_delete_conditional_format** - 条件付き書式のルールを index 指定で削除
+- **sheets_list_conditional_formats** - 条件付き書式のルールを一覧（削除に使う index 付き）
 
 ### 📄 Google Docs
 
@@ -51,6 +60,10 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **slides_add_shape** - スライドに図形（矩形、円、矢印など）を追加
 - **slides_update_slide_properties** - スライドのプロパティ（背景色など）を更新
 - **slides_batch_update_presentation** - 複数の更新リクエストをバッチで実行（高度な操作）
+- **slides_update_text_style** - テキストのフォント・サイズ・色・太字などを変更
+- **slides_update_shape_style** - 既存の図形の塗りと枠線を変更
+- **slides_insert_image** - 公開 URL の画像をスライドに挿入
+- **slides_replace_all_text** - プレゼンテーション内の文字列を一括置換（ひな形の差し込み）
 
 ### 📁 Google Drive
 

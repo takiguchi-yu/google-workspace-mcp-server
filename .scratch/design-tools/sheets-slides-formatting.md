@@ -44,3 +44,25 @@ Sheets に書式系ツール 8 本、Slides に 4 本を追加した。Docs は
   `slides_update_text_style` で飾る 2 手順になる。1 手順にまとめるかは、使われ方を見てから判断する。
 - **条件付き書式の `index` は削除のたびに繰り上がる。** 複数消すときは番号の大きい方からになる。
   ツールの description と実行結果の文面に明記したが、まとめて消す専用ツールは作っていない。
+
+## リリース時に起きたこと（0.6.0）
+
+タグ push で走った publish ワークフロー（run 34672639247）は、npm と Docker Hub まで成功し、
+**MCP Registry への登録だけが失敗した。**
+
+```
+registry validation failed for package 0 (@takiguchi-yu/google-workspace-mcp-server):
+NPM package '...' exists, but version '0.6.0' was not found (status: 404).
+A newly published release can take a moment to appear on the registry. Wait and retry
+```
+
+npm の publish 自体は成功していた（`+ @takiguchi-yu/google-workspace-mcp-server@0.6.0`、
+`npm notice Your package is being processed and may take a few minutes to become available.`）。
+反映前に Registry が検証したための競合。
+
+対策として `publish.yml` に 2 つ入れた。
+
+- npm に既に同じバージョンがあれば `npm publish` をスキップする（ジョブの再実行を可能にする）
+- Registry へ進む前に、npm への反映を最大 5 分待つ（10 秒 × 30 回）
+
+この対策は 0.7.0 のリリースから効く。0.6.0 の登録は `mcp-publisher` をローカルから叩いて済ませた。

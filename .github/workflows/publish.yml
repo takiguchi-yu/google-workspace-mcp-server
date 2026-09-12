@@ -65,12 +65,43 @@ jobs:
       - name: Build package
         run: npm run build
 
+      # npm はタグの push でしか動かないが、ジョブを再実行したときに
+      # 同じバージョンを publish しようとして止まらないよう、既に出ていればスキップする
       - name: Publish package to npm
-        run: npm publish --provenance --access public
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          name="$(node -p "require('./package.json').name")"
+
+          if npm view "$name@$version" version --prefer-online > /dev/null 2>&1; then
+            echo "$name@$version は既に npm に公開済みのためスキップします。"
+            exit 0
+          fi
+
+          npm publish --provenance --access public
 
       # ==========================================
       # 3. MCP Registry へのサーバー公開
       # ==========================================
+      # MCP Registry は登録時に npm 側へ「そのバージョンが実在するか」を問い合わせる。
+      # npm publish の直後は反映が間に合わず 404 になり、登録が失敗する（0.6.0 で実際に起きた）。
+      # 反映を確認してから次へ進む。
+      - name: Wait for the npm release to become visible
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          name="$(node -p "require('./package.json').name")"
+
+          for attempt in $(seq 1 30); do
+            if npm view "$name@$version" version --prefer-online > /dev/null 2>&1; then
+              echo "$name@$version が npm に反映されました（$attempt 回目）。"
+              exit 0
+            fi
+            echo "npm への反映を待っています（$attempt/30）..."
+            sleep 10
+          done
+
+          echo "npm に $name@$version が 5 分経っても現れませんでした。" >&2
+          exit 1
+
       - name: Install mcp-publisher
         run: |
           curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz

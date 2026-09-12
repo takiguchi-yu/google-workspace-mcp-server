@@ -62,16 +62,24 @@ export class DuplicateSlideCommand implements Command {
         return createErrorResult('指定されたスライドが見つかりません。');
       }
 
-      const targetIndex = insertIndex >= 0 ? insertIndex : slides_list.length;
+      // 複製されたスライドは元の直後に入る。位置を指定されたときだけ後から動かす。
+      // そのために複製先の ID をこちらで決めておく（未指定だと API が乱数で付ける）。
+      const duplicateObjectId = `slide_${Date.now()}`;
 
-      const requests = [
+      const requests: Record<string, unknown>[] = [
         {
           duplicateObject: {
             objectId: pageObjectId,
-            objectsToDuplicateWithInheritedLineBreak: [pageObjectId],
+            objectIds: { [pageObjectId]: duplicateObjectId },
           },
         },
       ];
+
+      if (insertIndex >= 0) {
+        requests.push({
+          updateSlidesPosition: { slideObjectIds: [duplicateObjectId], insertionIndex: insertIndex },
+        });
+      }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (slides.presentations as any).batchUpdate({
@@ -79,11 +87,14 @@ export class DuplicateSlideCommand implements Command {
         requestBody: { requests },
       });
 
+      const position =
+        insertIndex >= 0 ? `${String(insertIndex)} 番目` : `元のスライド（${String(sourceSlideIndex)} 番目）の直後`;
+
       return {
         content: [
           {
             type: 'text',
-            text: `スライドを複製しました。\nプレゼンテーションID: ${presentationId}\nターゲットインデックス: ${String(targetIndex)}`,
+            text: `スライドを複製しました。\n複製先の objectId: ${duplicateObjectId}\n挿入位置: ${position}`,
           },
         ],
       };

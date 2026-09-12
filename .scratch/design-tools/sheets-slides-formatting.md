@@ -135,3 +135,46 @@ publish ワークフローは今回も MCP Registry で落ちたが、**原因�
   スプレッドシート 1 枚（`1yOa5hDlH8DJ...`）とプレゼンテーション 3 枚。
 - **Docs の編集機能は保留。** 優先度が低いと判断された（2026-09-12）。
   チケットは [docs-editing.md](./docs-editing.md) に残してある。
+
+## 既存 26 ツールの実機点検（2026-09-12）
+
+`slides_add_text_box` が丸ごと壊れていたことを受けて、既存ツールを一巡させた。
+やり方は新ツールのときと同じで、ビルド済みコマンドを直接呼び、適用後に API から読み戻す。
+
+**結果: 26 本すべて成功。ただし 2 本にバグが見つかり、その場で直した。**
+
+### 見つかったバグ
+
+**1. `slides_duplicate_slide` — 存在しないフィールドを送っていた**
+
+```
+Invalid JSON payload received. Unknown name "objectsToDuplicateWithInheritedLineBreak"
+at 'requests[0].duplicate_object': Cannot find field.
+```
+
+`DuplicateObjectRequest` が持つのは `objectId` と `objectIds`（元 ID → 複製 ID の対応表）だけ。
+このツールは呼ぶたびに必ず失敗していた。あわせて、受け取っていた `insertIndex` が
+**どこにも使われておらず**、成功時のメッセージだけが「ターゲットインデックス」を名乗っていた。
+複製先の ID を `objectIds` でこちらが決め、`insertIndex` が指定されたときだけ
+`updateSlidesPosition` で動かすようにした。
+
+**2. `slides_update_text_shape` の `appendText: true` — 挿入位置が範囲外**
+
+```
+Invalid requests[0].insertText: The insertion index (1000000) should not be greater than
+the existing text length (9).
+```
+
+末尾に足すつもりで `insertionIndex: 1_000_000` を渡していたが、Slides API は
+「現在のテキスト長以下」しか受け付けない。現在の長さを数えてから渡すようにした。
+テキストの末尾には消せない改行が入っており、それは長さに含まれないので 1 文字ぶん差し引く。
+
+### 点検した範囲
+
+- Sheets 12 本（値の読み書き、バッチ更新、シート追加、追記、クリア、CSV 取り込み、行列の挿入と削除、一覧）
+- Slides 11 本（取得、ページ取得、テキスト置換と追記、複製、背景色、生バッチ、要素削除、一覧）
+- Docs 1 本（見出し・箇条書き・テーブルを含むドキュメントを作って Markdown 変換を確認）
+- Drive 2 本（検索、一覧）
+- メタツール 1 本（accounts_list）
+
+いずれも読み戻しで期待どおりの状態になっていることまで確認した。

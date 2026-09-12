@@ -131,3 +131,7 @@ publish ワークフローは今回も MCP Registry で落ちたが、**原因�
   同じやり方（ビルド済みコマンドを直接呼ぶ）で一巡させる価値がある。
 - **Registry 登録の JWT は短命。** ローカルから登録するときは、その都度
   `mcp-publisher login github` の device flow が要る。
+- **検証で作った Drive の 4 ファイルは本人が片付ける**（2026-09-12 時点）。
+  スプレッドシート 1 枚（`1yOa5hDlH8DJ...`）とプレゼンテーション 3 枚。
+- **Docs の編集機能は保留。** 優先度が低いと判断された（2026-09-12）。
+  チケットは [docs-editing.md](./docs-editing.md) に残してある。

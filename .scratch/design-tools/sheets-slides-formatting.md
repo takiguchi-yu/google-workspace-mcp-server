@@ -65,4 +65,13 @@ npm の publish 自体は成功していた（`+ @takiguchi-yu/google-workspace-
 - npm に既に同じバージョンがあれば `npm publish` をスキップする（ジョブの再実行を可能にする）
 - Registry へ進む前に、npm への反映を最大 5 分待つ（10 秒 × 30 回）
 
-この対策は 0.7.0 のリリースから効く。0.6.0 の登録は `mcp-publisher` をローカルから叩いて済ませた。
+この対策は 0.7.0 のリリースから効く。0.6.0 の登録は `mcp-publisher` をローカルから叩いて済ませた
+（`mcp-publisher login github` の device flow は人が実行）。
+
+公開先の最終状態。
+
+| 公開先       | バージョン             | 確認方法                                                                |
+| ------------ | ---------------------- | ----------------------------------------------------------------------- |
+| npm          | 0.6.0                  | `npm view @takiguchi-yu/google-workspace-mcp-server@0.6.0 version`      |
+| Docker Hub   | 0.6.0 / latest         | publish ワークフローの Build and push Docker image が成功               |
+| MCP Registry | 0.6.0（isLatest=true） | `curl https://registry.modelcontextprotocol.io/v0.1/servers?search=...` |

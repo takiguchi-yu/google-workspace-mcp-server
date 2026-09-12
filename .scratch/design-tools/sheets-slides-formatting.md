@@ -225,3 +225,19 @@ DATE_NOT_BETWEEN / DATE_IS_VALID / ONE_OF_RANGE / ONE_OF_LIST / BOOLEAN。
 - **`merge_cells` の MERGE_COLUMNS / MERGE_ROWS**: 既に結合済みの範囲に重ねて呼んでいた検証側の誤り。
 - **`replace_all_text` の pageObjectIds**: 存在しないスライド ID は API が拒否するのが正しい挙動
   （`The objects ([...]) are not pages.`）。
+
+## 0.6.2 のリリース
+
+全面点検で見つけた 4 件（スライドの複製・テキスト追記・shapeType・条件付き書式の type）を
+まとめて 0.6.2 として公開した。npm `latest: 0.6.2`、MCP Registry `0.6.2 isLatest=true`、
+Docker Hub `:0.6.2` / `:latest`。
+
+**publish ワークフローが初めて最後まで自動で通った。** npm の反映待ちは 11 回目（約 110 秒）で
+検知し、MCP Registry の登録も成功した。0.6.0 と 0.6.1 で入れた 2 つの対策が効いている。
+
+## 点検で分かった残りの穴（未検証）
+
+- **MCP プロトコル層（`src/index.ts` の stdio サーバー）は通していない。** ServiceManager までは
+  点検したが、その外側の stdio 配線は薄いとはいえ未検証。
+- **サービスアカウントの資格情報経路は通していない。** 登録されている 2 アカウントがどちらも
+  OAuth のため、`SERVICE_ACCOUNT_SCOPES` と資格情報の種類判別が動く経路を踏んでいない。

@@ -10,7 +10,16 @@ import { toCellFormat } from '../cell-format.js';
 import { toGridIndexes } from '../grid-range.js';
 import { fetchSheetIds } from '../sheet-id-resolver.js';
 
-/** 値の判定の仕方。Sheets API の ConditionType から、未指定を表す値を除いたもの */
+/**
+ * 値の判定の仕方。
+ *
+ * Sheets API の ConditionType はデータ入力規則と共用で、条件付き書式が受け取るのは
+ * その部分集合でしかない。列挙にあっても `ConditionType 'X' is not supported in
+ * conditional formats.` で弾かれる値があるため、実際に通るものだけを載せている。
+ * 除外したもの: TEXT_NOT_EQ / TEXT_IS_EMAIL / TEXT_IS_URL / DATE_NOT_EQ /
+ * DATE_ON_OR_BEFORE / DATE_ON_OR_AFTER / DATE_BETWEEN / DATE_NOT_BETWEEN /
+ * DATE_IS_VALID / ONE_OF_RANGE / ONE_OF_LIST / BOOLEAN / FILTER_EXPRESSION。
+ */
 const CONDITION_TYPES = [
   'NUMBER_GREATER',
   'NUMBER_GREATER_THAN_EQ',
@@ -25,24 +34,12 @@ const CONDITION_TYPES = [
   'TEXT_STARTS_WITH',
   'TEXT_ENDS_WITH',
   'TEXT_EQ',
-  'TEXT_NOT_EQ',
-  'TEXT_IS_EMAIL',
-  'TEXT_IS_URL',
   'DATE_EQ',
-  'DATE_NOT_EQ',
   'DATE_BEFORE',
   'DATE_AFTER',
-  'DATE_ON_OR_BEFORE',
-  'DATE_ON_OR_AFTER',
-  'DATE_BETWEEN',
-  'DATE_NOT_BETWEEN',
-  'DATE_IS_VALID',
-  'ONE_OF_RANGE',
-  'ONE_OF_LIST',
   'BLANK',
   'NOT_BLANK',
   'CUSTOM_FORMULA',
-  'BOOLEAN',
 ] as const;
 
 /** 色スケールの基準点の決め方 */
@@ -206,7 +203,8 @@ const toBooleanRule = (condition: unknown, format: unknown): sheets_v4.Schema$Bo
 
   if (typeof type !== 'string' || !(CONDITION_TYPES as readonly string[]).includes(type)) {
     throw new Error(
-      `condition.type は Sheets API の ConditionType で指定してください（受け取った値: ${String(type)}）。`,
+      `condition.type は条件付き書式で使える ConditionType で指定してください（受け取った値: ${String(type)}）。\n` +
+        `使える値: ${CONDITION_TYPES.join(' / ')}`,
     );
   }
   if (typeof format !== 'object' || format === null) {

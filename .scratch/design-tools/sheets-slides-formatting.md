@@ -178,3 +178,50 @@ the existing text length (9).
 - メタツール 1 本（accounts_list）
 
 いずれも読み戻しで期待どおりの状態になっていることまで確認した。
+
+## 分岐・enum まで含めた全面点検（2026-09-12）
+
+正常系を 1 回ずつ通すだけでは足りないので、省略可能な引数・異常系・enum の全値・
+ServiceManager 層まで網羅した。合計 226 件。
+
+| 対象                                                | 件数 | 結果            |
+| --------------------------------------------------- | ---- | --------------- |
+| ServiceManager 層（account の付与と解決、振り分け） | 14   | 全 OK           |
+| Sheets の分岐と異常系                               | 74   | 全 OK           |
+| Slides / Docs / Drive の分岐と異常系                | 55   | 全 OK           |
+| 宣言されている enum の全値                          | 83   | 全 OK（修正後） |
+
+ServiceManager 層では、`account` を省略したとき・`work` / `private` を明示したとき・
+空白だけのとき・存在しないラベルのときを確認した。存在しないラベルには
+`Unknown account 'x'. Available accounts: work, private.` が返る。
+
+### 見つかったバグ
+
+**3. `slides_add_shape` の shapeType に、API が受け付けない値が 4 つ混じっていた**
+
+宣言していた 15 個のうち `OVAL` / `ARROW_WEST` / `ARROW_SOUTH` / `STAR` が
+`Invalid value at 'requests[0].create_shape.shape_type'` で弾かれる。
+候補名を実際に試して `ELLIPSE` / `LEFT_ARROW` / `DOWN_ARROW` / `STAR_5` に置き換えた。
+矢印は `RIGHT_ARROW` / `LEFT_ARROW` / `UP_ARROW` / `DOWN_ARROW` に揃え、
+`ROUND_RECTANGLE` を足して 16 個にした。コマンドは enum で弾かず素通しするので、
+`ARROW_EAST` を渡していた呼び出しは今も通る（API 側に残っているため）。
+
+**4. `sheets_add_conditional_format` の condition.type に、条件付き書式では使えない値が 12 個**
+
+`ConditionType` の列挙はデータ入力規則と共用で、条件付き書式が受けるのはその部分集合。
+`ConditionType 'X' is not supported in conditional formats.` で弾かれるものを外し、
+31 個 → 19 個にした。外したのは TEXT_NOT_EQ / TEXT_IS_EMAIL / TEXT_IS_URL /
+DATE_NOT_EQ / DATE_ON_OR_BEFORE / DATE_ON_OR_AFTER / DATE_BETWEEN /
+DATE_NOT_BETWEEN / DATE_IS_VALID / ONE_OF_RANGE / ONE_OF_LIST / BOOLEAN。
+0.6.0 で追加したツールの、こちらの仕様調査漏れ。
+
+### 誤検知だったもの（ツールは正しい）
+
+- **要素の大きさ**: Slides は `size` を 3000000 EMU に正規化し、実寸を `transform.scale` で表す。
+  `size` だけを読むと指定と食い違って見えるが、`size × scale` は指定どおり
+  （3000000 × 0.6096 = 1,828,800 = 既定幅）。
+- **`insert_dimension` / `delete_dimension`**: 新規スプレッドシートの先頭シートは
+  `sheetId` が 0 とは限らない。0 決め打ちで呼んだ検証側の誤り。
+- **`merge_cells` の MERGE_COLUMNS / MERGE_ROWS**: 既に結合済みの範囲に重ねて呼んでいた検証側の誤り。
+- **`replace_all_text` の pageObjectIds**: 存在しないスライド ID は API が拒否するのが正しい挙動
+  （`The objects ([...]) are not pages.`）。

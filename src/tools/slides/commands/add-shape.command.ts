@@ -116,38 +116,18 @@ export class AddShapeCommand implements Command {
       const shapeObjectId = `shape_${Date.now()}`;
 
       const shapeProperties: Record<string, unknown> = {
-        shapeType,
-        transform: {
-          scaleX: { magnitude: width, unit: 'EMU' },
-          scaleY: { magnitude: height, unit: 'EMU' },
-          translateX: { magnitude: left, unit: 'EMU' },
-          translateY: { magnitude: top, unit: 'EMU' },
+        // 枠線。色は outline.color ではなく outlineFill.solidFill.color に入れる
+        outline: {
+          outlineFill: { solidFill: { color: { rgbColor: hexToRgb(strokeColor) } } },
+          weight: { magnitude: strokeWidth, unit: 'EMU' },
         },
       };
+      const fields = ['outline'];
 
-      // Fill color の設定
       if (fillColor) {
-        const rgb = hexToRgb(fillColor);
-        shapeProperties.shapeBackgroundFill = {
-          solidFill: {
-            color: {
-              rgbColor: rgb,
-            },
-          },
-        };
+        shapeProperties.shapeBackgroundFill = { solidFill: { color: { rgbColor: hexToRgb(fillColor) } } };
+        fields.push('shapeBackgroundFill');
       }
-
-      // Stroke (border) の設定
-      const strokeRgb = hexToRgb(strokeColor);
-      shapeProperties.outline = {
-        color: {
-          rgbColor: strokeRgb,
-        },
-        weight: {
-          magnitude: strokeWidth,
-          unit: 'EMU',
-        },
-      };
 
       const requests = [
         {
@@ -156,12 +136,12 @@ export class AddShapeCommand implements Command {
             shapeType,
             elementProperties: {
               pageObjectId,
-              transform: {
-                scaleX: { magnitude: width },
-                scaleY: { magnitude: height },
-                translateX: { magnitude: left },
-                translateY: { magnitude: top },
+              // 大きさは size で渡す。transform の scale は倍率（スカラー）であって寸法ではない
+              size: {
+                width: { magnitude: width, unit: 'EMU' },
+                height: { magnitude: height, unit: 'EMU' },
               },
+              transform: { scaleX: 1, scaleY: 1, translateX: left, translateY: top, unit: 'EMU' },
             },
           },
         },
@@ -169,7 +149,7 @@ export class AddShapeCommand implements Command {
           updateShapeProperties: {
             objectId: shapeObjectId,
             shapeProperties,
-            fields: 'shapeBackgroundFill,outline',
+            fields: fields.join(','),
           },
         },
       ];

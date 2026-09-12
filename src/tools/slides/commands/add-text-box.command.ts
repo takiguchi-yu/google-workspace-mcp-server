@@ -84,12 +84,12 @@ export class AddTextBoxCommand implements Command {
             shapeType: 'TEXT_BOX',
             elementProperties: {
               pageObjectId,
-              transform: {
-                scaleX: { magnitude: width },
-                scaleY: { magnitude: height },
-                translateX: { magnitude: left },
-                translateY: { magnitude: top },
+              // 大きさは size で渡す。transform の scale は倍率（スカラー）であって寸法ではない
+              size: {
+                width: { magnitude: width, unit: 'EMU' },
+                height: { magnitude: height, unit: 'EMU' },
               },
+              transform: { scaleX: 1, scaleY: 1, translateX: left, translateY: top, unit: 'EMU' },
             },
           },
         },

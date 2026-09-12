@@ -75,3 +75,34 @@ npm の publish 自体は成功していた（`+ @takiguchi-yu/google-workspace-
 | npm          | 0.6.0                  | `npm view @takiguchi-yu/google-workspace-mcp-server@0.6.0 version`      |
 | Docker Hub   | 0.6.0 / latest         | publish ワークフローの Build and push Docker image が成功               |
 | MCP Registry | 0.6.0（isLatest=true） | `curl https://registry.modelcontextprotocol.io/v0.1/servers?search=...` |
+
+## 実機での動作確認（0.6.0）
+
+ビルド済みのコマンドを実際の Google API に対して直接呼び、12 ツールすべてを通した。
+適用後はスプレッドシート／プレゼンテーションを読み戻して、反映されたことまで確認した。
+
+- Sheets 8 本すべて成功。見出しの背景色・文字色・太字・サイズ・横位置、通貨書式、
+  外枠 SOLID と最下辺 SOLID_THICK、結合（A7:D7）、先頭行の固定、条件付き書式 2 件の
+  追加と一覧と削除がいずれも読み戻しで一致した（色は float32 の丸め差のみ）。
+- Slides 4 本すべて成功。フォント・サイズ・太字・文字色、図形の塗りと 2pt の破線枠、
+  画像の挿入、`{{title}}` の置換 1 件を読み戻しで確認した。
+- 異常系も意図どおり。存在しないシート名は「利用可能なシート」を添えて名指しし、
+  非公開の Drive URL は画像挿入の制約を添えて断った。
+
+### ここで見つかった既存バグ（0.6.0 以前から）
+
+`slides_add_text_box` と `slides_add_shape` が **API に弾かれて一切動かない状態だった**。
+
+```
+Invalid value at 'requests[0].create_shape.element_properties.transform' (scale_x),
+Starting an object on a scalar field
+```
+
+原因は 3 つ。
+
+1. `AffineTransform.scaleX` / `translateX` は数値なのに `{ magnitude, unit }` を渡していた
+2. 要素の大きさは `elementProperties.size` で渡すべきところを、`transform` の倍率に入れていた
+3. `add_shape` の枠線の色を `outline.color` に入れていた（正しくは `outline.outlineFill.solidFill.color`）
+
+新ツールの検証が先に進まないため、この 3 点を直した。直したあとは
+`add_text_box` → `update_text_style`、`add_shape` → `update_shape_style` が通るようになった。

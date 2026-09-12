@@ -110,5 +110,17 @@ jobs:
       - name: Authenticate to MCP Registry (OIDC)
         run: ./mcp-publisher login github-oidc
 
+      # Registry は npm へ問い合わせてからバージョンを検証する。その HTTP が
+      # タイムアウトして 400 になることがある（0.6.1 で発生）。数回やり直す。
       - name: Publish server to MCP Registry
-        run: ./mcp-publisher publish
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if ./mcp-publisher publish; then
+              exit 0
+            fi
+            echo "MCP Registry への登録に失敗しました（$attempt/5）。30 秒後にやり直します。"
+            sleep 30
+          done
+
+          echo "MCP Registry への登録が 5 回とも失敗しました。" >&2
+          exit 1

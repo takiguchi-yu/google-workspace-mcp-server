@@ -8,6 +8,15 @@ import { startRowOf } from '../a1-range.js';
 import { sheetsErrorMessage } from '../sheets-error.js';
 
 /**
+ * 既定で読む範囲。列は Sheets の最終列 ZZZ まで、行は 1000 行までに抑える。
+ * 列を Z で切ると AA 以降が黙って読み落とされるため、列側は制限しない。
+ */
+const DEFAULT_RANGE = 'A1:ZZZ1000';
+
+/** セルの値の見せ方として受け付ける値 */
+const VALUE_RENDER_OPTIONS = ['FORMATTED_VALUE', 'UNFORMATTED_VALUE', 'FORMULA'] as const;
+
+/**
  * スプレッドシートのセル範囲のデータを読み取るコマンド
  */
 export class ReadSheetValuesCommand implements Command {
@@ -15,7 +24,7 @@ export class ReadSheetValuesCommand implements Command {
     return {
       name: 'sheets_read_sheet_values',
       description:
-        'Reads values from a specific range in a Google Sheet. Row numbers in the output are the actual row numbers in the sheet, not offsets within the range.',
+        'Reads values from a specific range in a Google Sheet. Row numbers in the output are the actual row numbers in the sheet, not offsets within the range. By default cells are returned as they are displayed; pass valueRenderOption to read the underlying formulas or raw values instead.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -25,8 +34,16 @@ export class ReadSheetValuesCommand implements Command {
           },
           range: {
             type: 'string',
-            description: 'The range to read (e.g., "Sheet1!A1:D10", "A1:D10"). Defaults to "A1:Z1000".',
-            default: 'A1:Z1000',
+            description:
+              'The range to read (e.g., "Sheet1!A1:D10", "A1:D10"). Defaults to the first 1000 rows of every column ("A1:ZZZ1000"). Pass just a sheet name (e.g., "Sheet1") to read the whole sheet.',
+            default: DEFAULT_RANGE,
+          },
+          valueRenderOption: {
+            type: 'string',
+            description:
+              'How cells are rendered. FORMATTED_VALUE (default) returns what is displayed, including number and date formatting. UNFORMATTED_VALUE returns the underlying numbers and booleans without formatting. FORMULA returns the formula itself (e.g., "=SUM(A1:A9)") for cells that have one.',
+            enum: [...VALUE_RENDER_OPTIONS],
+            default: 'FORMATTED_VALUE',
           },
         },
         required: ['spreadsheetId'],
@@ -36,7 +53,12 @@ export class ReadSheetValuesCommand implements Command {
 
   async execute(args: ToolArgs, auth: OAuth2Client): Promise<CallToolResult> {
     const spreadsheetId = typeof args.spreadsheetId === 'string' ? args.spreadsheetId : '';
-    const range = typeof args.range === 'string' ? args.range : 'A1:Z1000';
+    const range = typeof args.range === 'string' && args.range !== '' ? args.range : DEFAULT_RANGE;
+    const valueRenderOption =
+      typeof args.valueRenderOption === 'string' &&
+      (VALUE_RENDER_OPTIONS as readonly string[]).includes(args.valueRenderOption)
+        ? args.valueRenderOption
+        : 'FORMATTED_VALUE';
 
     if (spreadsheetId === '') {
       return createErrorResult('spreadsheetId が指定されていません。');
@@ -48,6 +70,7 @@ export class ReadSheetValuesCommand implements Command {
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
         range,
+        valueRenderOption,
       });
 
       const values = response.data.values ?? [];
@@ -63,7 +86,8 @@ export class ReadSheetValuesCommand implements Command {
       const startRow = startRowOf(response.data.range ?? range);
 
       // データを整形して表示
-      let result = `範囲 "${range}" のデータを取得しました (${String(values.length)} 行):\n\n`;
+      const renderNote = valueRenderOption === 'FORMATTED_VALUE' ? '' : `, ${valueRenderOption}`;
+      let result = `範囲 "${range}" のデータを取得しました (${String(values.length)} 行${renderNote}):\n\n`;
 
       // ヘッダー行があると仮定して表形式で表示
       const maxColumns = Math.max(...values.map((row) => (Array.isArray(row) ? row.length : 0)));
@@ -75,7 +99,10 @@ export class ReadSheetValuesCommand implements Command {
           const rowNum = startRow + i;
           const cells = Array.from({ length: maxColumns }, (_, j) => {
             const cell = row[j] as unknown;
-            return typeof cell === 'string' || typeof cell === 'number' ? String(cell) : '';
+            // UNFORMATTED_VALUE では真偽値がそのまま返る。ここで弾くと TRUE/FALSE が空セルに見えてしまう
+            return typeof cell === 'string' || typeof cell === 'number' || typeof cell === 'boolean'
+              ? String(cell)
+              : '';
           });
           result += `行 ${String(rowNum)}: ${cells.join(' | ')}\n`;
         }

@@ -4,7 +4,7 @@ Slides API v1 の 43 種のリクエストのうち、0.7.0 時点のツール�
 文字単位のスタイルはあるのに段落単位が丸ごと無く、スライドは複製でしか増やせない。
 装飾の穴を 10 本のツールで埋める。
 
-**Status:** 実装・実機点検まで完了。リリース（push）待ち
+**Status:** 完了（0.8.0 としてリリース済み）
 **Blocked by:** なし
 
 ## 完了条件
@@ -22,7 +22,8 @@ Slides API v1 の 43 種のリクエストのうち、0.7.0 時点のツール�
 - [x] README / class-diagram / CONTEXT.md を更新する
 - [x] `npm run type-check` / `lint` / `format:check` / `test` が通る
 - [x] 実機で全ツールを通す。正常系・異常系に加えて **enum は全値を通す**
-- [ ] 0.8.0 としてリリースする — `npm version minor` と push が残り
+- [x] 0.8.0 としてリリースする — タグ `v0.8.0`（コミット b2696fb）。
+      GitHub Actions の Publish が success（run 34983029931、7m50s）で、npm は 0.8.0 を配信中
 
 ## 設計パス
 

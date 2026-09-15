@@ -12,13 +12,17 @@ import { textRangeSchema, toTextRange } from '../text-range.js';
  *
  * slides_create_paragraph_bullets の対になる操作を別ツールにしてある。
  * 設定ツールの引数の省略が解除に化けると、戻す手立てのないまま体裁が消えるため。
+ *
+ * **解除するとインデントが書き換わる。** 実機で確かめた値（入れ子 3 段の箇条書き）:
+ * 解除前 indentStart 36 / 72 / 108pt → 解除後 なし / 36 / 72pt。
+ * 入れ子の深さは残るが、箇条書きが足していたぶんは消えるため、先頭の段落は余白まで戻る。
  */
 export class DeleteParagraphBulletsCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_delete_paragraph_bullets',
       description:
-        'Remove bullets or numbering from the paragraphs of a shape or text box, keeping the text. The paragraphs keep the indentation the bullets gave them. Applies to all paragraphs unless startIndex and endIndex are given.',
+        'Remove bullets or numbering from the paragraphs of a shape or text box, keeping the text. Nested paragraphs keep an indent that reflects how deep they were, but top-level ones go back to the margin: the indent the bullet itself added is removed, and any indent you set earlier is overwritten. Call slides_update_paragraph_style afterwards if you need a particular indent. Applies to all paragraphs unless startIndex and endIndex are given.',
       inputSchema: {
         type: 'object',
         properties: {

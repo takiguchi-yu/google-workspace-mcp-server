@@ -11,13 +11,17 @@ import { toObjectIds } from '../object-ids.js';
  *
  * まとめたあとは、グループの objectId を slides_update_element_transform に渡せば
  * 中身ごと動かせる。解除は slides_ungroup_elements が引き受ける。
+ *
+ * **まとめられない要素がある。** 実機で確かめた結果、図形・テキストボックス・線・画像は
+ * まとめられるが、表とレイアウト由来のプレースホルダは API に断られる。
+ * すでに別のグループに入っている要素も対象にできない。
  */
 export class GroupElementsCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_group_elements',
       description:
-        'Group two or more elements on the same slide so they move and resize together. The returned group object ID can be passed to slides_update_element_transform or slides_delete_element. Use slides_ungroup_elements to take the group apart.',
+        'Group two or more elements on the same slide so they move and resize together. Shapes, text boxes, lines, images, and existing groups can be grouped; tables and placeholders inherited from the layout cannot, and neither can an element that already belongs to another group. The returned group object ID can be passed to slides_update_element_transform or slides_delete_element. Use slides_ungroup_elements to take the group apart.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -28,7 +32,7 @@ export class GroupElementsCommand implements Command {
           objectIds: {
             type: 'array',
             description:
-              'Object IDs of at least two elements to group. They must all be on the same slide, and none of them may be a placeholder inherited from the layout.',
+              'Object IDs of at least two elements to group. They must all be on the same slide, and none of them may be a table, a placeholder inherited from the layout, or an element that is already inside another group.',
             items: { type: 'string' },
           },
         },

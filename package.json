@@ -23,7 +23,7 @@
     "format:check": "prettier --check .",
     "build": "tsc",
     "sync-version": "node ./scripts/sync-version.js",
-    "version": "npm run sync-version && git add server.json",
+    "version": "node ./scripts/sync-version.js --stage",
     "start": "node ./dist/index.js",
     "test": "npm run build && node --test \"dist/**/*.test.js\""
   },

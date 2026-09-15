@@ -145,11 +145,36 @@ classDiagram
         +execute(args, auth) Promise~CallToolResult~
     }
 
+    class SetDataValidationCommand {
+        +getToolDefinition() ToolDefinition
+        +execute(args, auth) Promise~CallToolResult~
+    }
+
+    class SortRangeCommand {
+        +getToolDefinition() ToolDefinition
+        +execute(args, auth) Promise~CallToolResult~
+    }
+
     %% 書式のヘルパー（純粋な変換と API 呼び出しを分ける）
     class GridRange {
         <<module>>
         +toGridIndexes(range) GridIndexes
         +toA1Range(indexes, sheetTitle) string
+        +toColumnIndex(value, name) number
+    }
+
+    class Condition {
+        <<module>>
+        +toBooleanCondition(value, allowed, name) BooleanCondition
+        +CONDITIONAL_FORMAT_CONDITION_TYPES
+        +DATA_VALIDATION_CONDITION_TYPES
+        +FILTER_CONDITION_TYPES
+    }
+
+    class SortSpec {
+        <<module>>
+        +toSortSpecs(value, name) SortSpec[]
+        +describeSortSpecs(specs) string
     }
 
     class CellFormat {
@@ -193,6 +218,13 @@ classDiagram
     FormatCellsCommand ..> SheetIds : resolves sheetId with
     CellFormat ..> Color : converts color with
 
+    Command <|.. SetDataValidationCommand : implements
+    Command <|.. SortRangeCommand : implements
+    SetDataValidationCommand ..> Condition : builds condition with
+    SetDataValidationCommand ..> SheetIds : resolves sheetId with
+    SortRangeCommand ..> SortSpec : builds sort keys with
+    SortSpec ..> GridRange : converts column letters with
+
     note for AccountLabel "値オブジェクト\n（書式を検証済み）"
     note for AccountRegistry "レジストリ\n（遅延生成・キャッシュ）"
     note for TokenStore "原子的書き込み\n（temp + rename）"
@@ -203,6 +235,8 @@ classDiagram
     note for ListSpreadsheetsCommand "コマンド\n（auth を保持しない）"
     note for FormatCellsCommand "書式コマンド\n（ヘルパーに委ねる）"
     note for GridRange "純粋な変換\n（API を知らない）"
+    note for Condition "用途ごとに使える\nConditionType が違う"
+    note for SortSpec "並べ替えとフィルタで共用"
     note for Color "Sheets と Slides で共用"
     note for SheetIds "シート一覧を 1 度だけ引く"
 ```
@@ -211,12 +245,14 @@ classDiagram
 
 ## 設計上の判断
 
-| 判断                                                   | 理由                                                                                                                                   |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `account` をコマンドではなく `ServiceManager` が扱う   | コマンドを増やしたときの `account` の書き忘れを構造的に防ぐため                                                                        |
-| サーバーを分けず 1 プロセスで複数アカウントを持つ      | ツール定義がアカウント数に比例して増えず、アカウントを跨ぐ操作も 1 セッションで完結するため                                            |
-| クライアントを起動時ではなく初回使用時に生成する       | 1 アカウントのトークン失効で全アカウントが使えなくなるのを防ぐため                                                                     |
-| ラベルを主キーにし、メールアドレスを保持しない         | 引数・ファイル名・ログ・エラー文面に個人情報が載らないようにするため                                                                   |
-| スコープをアカウントごとに変えられるようにしない       | 実際に困っていない段階で設定と分岐を複雑化させないため（必要になれば `accounts.json` に任意項目を足せば後方互換のまま拡張できる）      |
-| 書式ツールの範囲を A1 記法に統一し、sheetId を毎回引く | 利用者と AI が読み書きするのは A1 記法であり、行列番号を外に出さないため（[ADR 0001](./adr/0001-a1-notation-for-formatting-range.md)） |
-| 色を 16 進数で受け、変換を 1 モジュールに集約する      | Sheets と Slides で同じ変換が重複していたため。`src/tools/shared/color.ts` に集約した                                                  |
+| 判断                                                                                            | 理由                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `account` をコマンドではなく `ServiceManager` が扱う                                            | コマンドを増やしたときの `account` の書き忘れを構造的に防ぐため                                                                        |
+| サーバーを分けず 1 プロセスで複数アカウントを持つ                                               | ツール定義がアカウント数に比例して増えず、アカウントを跨ぐ操作も 1 セッションで完結するため                                            |
+| クライアントを起動時ではなく初回使用時に生成する                                                | 1 アカウントのトークン失効で全アカウントが使えなくなるのを防ぐため                                                                     |
+| ラベルを主キーにし、メールアドレスを保持しない                                                  | 引数・ファイル名・ログ・エラー文面に個人情報が載らないようにするため                                                                   |
+| スコープをアカウントごとに変えられるようにしない                                                | 実際に困っていない段階で設定と分岐を複雑化させないため（必要になれば `accounts.json` に任意項目を足せば後方互換のまま拡張できる）      |
+| 書式ツールの範囲を A1 記法に統一し、sheetId を毎回引く                                          | 利用者と AI が読み書きするのは A1 記法であり、行列番号を外に出さないため（[ADR 0001](./adr/0001-a1-notation-for-formatting-range.md)） |
+| 色を 16 進数で受け、変換を 1 モジュールに集約する                                               | Sheets と Slides で同じ変換が重複していたため。`src/tools/shared/color.ts` に集約した                                                  |
+| 条件（`BooleanCondition`）の組み立てを共通化し、使える `ConditionType` の集合は呼び出し側が渡す | 条件付き書式・入力規則・フィルタで同じ形を使うが、受け付ける型はそれぞれ別の部分集合で、用途違いは API に弾かれるため                  |
+| 入力規則の設定と解除を別ツールにする                                                            | Sheets API は `rule` を省略すると解除になるが、引数の省略が破壊的操作に化けるのを避けるため                                            |

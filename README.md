@@ -24,16 +24,24 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 
 - **sheets_list_spreadsheets** - スプレッドシート一覧を取得
 - **sheets_get_spreadsheet_info** - スプレッドシートの詳細情報（シート一覧、プロパティ）を取得
-- **sheets_read_sheet_values** - セル範囲のデータを読み取り
+- **sheets_read_sheet_values** - セル範囲のデータを読み取り（数式や書式前の生の値も取得可）
 - **sheets_update_sheet_values** - セル範囲のデータを更新
 - **sheets_batch_update_sheet_values** - 複数のセル範囲を一度に更新
 - **sheets_create_spreadsheet** - 新規スプレッドシートを作成
 - **sheets_add_sheet** - 既存のスプレッドシートにシートを追加
+- **sheets_delete_sheet** - シートを中身ごと削除（最後の 1 枚は削除不可）
+- **sheets_duplicate_sheet** - シートを書式・数式ごと複製（雛形からの起こし）
+- **sheets_update_sheet_properties** - シート名・タブの色・タブの並び順・非表示を変更
 - **sheets_append_values** - 既存データの末尾に行を追記
 - **sheets_clear_sheet_values** - 指定範囲のセルの値をクリア
 - **sheets_import_csv** - CSV/TSV ファイルをスプレッドシートにインポート（カスタムデリミタ・Base64対応）
 - **sheets_insert_dimension** - 指定位置に行・列を挿入
 - **sheets_delete_dimension** - 指定範囲の行・列を削除
+- **sheets_sort_range** - 範囲の中身を複数列のキーで並べ替え
+- **sheets_set_basic_filter** - フィルタを設置（抽出条件・既定の並び順も指定可）
+- **sheets_clear_basic_filter** - フィルタを取り除く
+- **sheets_set_data_validation** - 入力規則を設定（プルダウン・チェックボックス・入力制限）
+- **sheets_clear_data_validation** - 入力規則を解除
 - **sheets_format_cells** - セルの塗り・文字色・太字・サイズ・配置・数値書式を変更（範囲ごとにまとめて指定）
 - **sheets_set_borders** - セル範囲に罫線を引く・消す（外周と内側を個別に指定可）
 - **sheets_merge_cells** - セルを結合・解除（MERGE_ALL / MERGE_COLUMNS / MERGE_ROWS / UNMERGE）

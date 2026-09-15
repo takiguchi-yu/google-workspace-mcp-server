@@ -3,6 +3,8 @@ import { AddConditionalFormatCommand } from './commands/add-conditional-format.c
 import { AddSheetCommand } from './commands/add-sheet.command.js';
 import { AppendSheetValuesCommand } from './commands/append-sheet-values.command.js';
 import { BatchUpdateSheetValuesCommand } from './commands/batch-update-sheet-values.command.js';
+import { ClearBasicFilterCommand } from './commands/clear-basic-filter.command.js';
+import { ClearDataValidationCommand } from './commands/clear-data-validation.command.js';
 import { ClearSheetValuesCommand } from './commands/clear-sheet-values.command.js';
 import { CreateSpreadsheetCommand } from './commands/create-spreadsheet.command.js';
 import { DeleteConditionalFormatCommand } from './commands/delete-conditional-format.command.js';
@@ -19,7 +21,10 @@ import { ListSpreadsheetsCommand } from './commands/list-spreadsheets.command.js
 import { MergeCellsCommand } from './commands/merge-cells.command.js';
 import { ReadSheetValuesCommand } from './commands/read-sheet-values.command.js';
 import { ResizeDimensionCommand } from './commands/resize-dimension.command.js';
+import { SetBasicFilterCommand } from './commands/set-basic-filter.command.js';
 import { SetBordersCommand } from './commands/set-borders.command.js';
+import { SetDataValidationCommand } from './commands/set-data-validation.command.js';
+import { SortRangeCommand } from './commands/sort-range.command.js';
 import { UpdateSheetPropertiesCommand } from './commands/update-sheet-properties.command.js';
 import { UpdateSheetValuesCommand } from './commands/update-sheet-values.command.js';
 
@@ -47,6 +52,11 @@ export class SheetsService extends BaseCommandService {
     this.registerCommand(new ImportSheetCsvCommand());
     this.registerCommand(new InsertDimensionCommand());
     this.registerCommand(new DeleteDimensionCommand());
+    this.registerCommand(new SortRangeCommand());
+    this.registerCommand(new SetBasicFilterCommand());
+    this.registerCommand(new ClearBasicFilterCommand());
+    this.registerCommand(new SetDataValidationCommand());
+    this.registerCommand(new ClearDataValidationCommand());
     this.registerCommand(new FormatCellsCommand());
     this.registerCommand(new SetBordersCommand());
     this.registerCommand(new MergeCellsCommand());

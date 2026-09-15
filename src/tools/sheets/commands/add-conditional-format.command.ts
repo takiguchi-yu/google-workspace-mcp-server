@@ -7,40 +7,9 @@ import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
 import { hexToRgb } from '../../shared/color.js';
 import { toCellFormat } from '../cell-format.js';
+import { CONDITIONAL_FORMAT_CONDITION_TYPES, toBooleanCondition } from '../condition.js';
 import { toGridIndexes } from '../grid-range.js';
 import { fetchSheetIds } from '../sheet-id-resolver.js';
-
-/**
- * 値の判定の仕方。
- *
- * Sheets API の ConditionType はデータ入力規則と共用で、条件付き書式が受け取るのは
- * その部分集合でしかない。列挙にあっても `ConditionType 'X' is not supported in
- * conditional formats.` で弾かれる値があるため、実際に通るものだけを載せている。
- * 除外したもの: TEXT_NOT_EQ / TEXT_IS_EMAIL / TEXT_IS_URL / DATE_NOT_EQ /
- * DATE_ON_OR_BEFORE / DATE_ON_OR_AFTER / DATE_BETWEEN / DATE_NOT_BETWEEN /
- * DATE_IS_VALID / ONE_OF_RANGE / ONE_OF_LIST / BOOLEAN / FILTER_EXPRESSION。
- */
-const CONDITION_TYPES = [
-  'NUMBER_GREATER',
-  'NUMBER_GREATER_THAN_EQ',
-  'NUMBER_LESS',
-  'NUMBER_LESS_THAN_EQ',
-  'NUMBER_EQ',
-  'NUMBER_NOT_EQ',
-  'NUMBER_BETWEEN',
-  'NUMBER_NOT_BETWEEN',
-  'TEXT_CONTAINS',
-  'TEXT_NOT_CONTAINS',
-  'TEXT_STARTS_WITH',
-  'TEXT_ENDS_WITH',
-  'TEXT_EQ',
-  'DATE_EQ',
-  'DATE_BEFORE',
-  'DATE_AFTER',
-  'BLANK',
-  'NOT_BLANK',
-  'CUSTOM_FORMULA',
-] as const;
 
 /** 色スケールの基準点の決め方 */
 const INTERPOLATION_POINT_TYPES = ['MIN', 'MAX', 'NUMBER', 'PERCENT', 'PERCENTILE'] as const;
@@ -91,7 +60,7 @@ export class AddConditionalFormatCommand implements Command {
             description:
               'The condition that turns the formatting on. Example: {"type": "NUMBER_GREATER", "values": ["100"]}. Required unless gradient is given.',
             properties: {
-              type: { type: 'string', enum: [...CONDITION_TYPES] },
+              type: { type: 'string', enum: [...CONDITIONAL_FORMAT_CONDITION_TYPES] },
               values: {
                 type: 'array',
                 description:
@@ -195,18 +164,8 @@ export class AddConditionalFormatCommand implements Command {
 
 /** 条件と書式から booleanRule を組み立てる */
 const toBooleanRule = (condition: unknown, format: unknown): sheets_v4.Schema$BooleanRule => {
-  if (typeof condition !== 'object' || condition === null) {
-    throw new Error('condition は { type, values } のオブジェクトで指定してください。');
-  }
+  const booleanCondition = toBooleanCondition(condition, CONDITIONAL_FORMAT_CONDITION_TYPES, 'condition');
 
-  const { type, values } = condition as Record<string, unknown>;
-
-  if (typeof type !== 'string' || !(CONDITION_TYPES as readonly string[]).includes(type)) {
-    throw new Error(
-      `condition.type は条件付き書式で使える ConditionType で指定してください（受け取った値: ${String(type)}）。\n` +
-        `使える値: ${CONDITION_TYPES.join(' / ')}`,
-    );
-  }
   if (typeof format !== 'object' || format === null) {
     throw new Error('condition を指定するときは format も指定してください。');
   }
@@ -215,12 +174,6 @@ const toBooleanRule = (condition: unknown, format: unknown): sheets_v4.Schema$Bo
 
   if (fields.length === 0) {
     throw new Error('format に適用する書式が 1 つも指定されていません。');
-  }
-
-  const booleanCondition: sheets_v4.Schema$BooleanCondition = { type };
-
-  if (Array.isArray(values) && values.length > 0) {
-    booleanCondition.values = values.map((value) => ({ userEnteredValue: String(value) }));
   }
 
   return { condition: booleanCondition, format: cellFormat };

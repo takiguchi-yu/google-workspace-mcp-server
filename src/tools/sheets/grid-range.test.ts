@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { columnIndexOf, columnLettersOf, toA1Range, toGridIndexes } from './grid-range.js';
+import { columnIndexOf, columnLettersOf, toA1Range, toColumnIndex, toGridIndexes } from './grid-range.js';
 
 describe('columnIndexOf', () => {
   it('1 文字の列を 0 始まりの番号に変換する', () => {
@@ -117,5 +117,26 @@ describe('toA1Range', () => {
     for (const range of ['A1:D10', 'B:D', '2:5', 'C7:C7']) {
       assert.equal(toA1Range(toGridIndexes(range)), range);
     }
+  });
+});
+
+describe('toColumnIndex', () => {
+  it('列の記号を 0 始まりの列番号にする', () => {
+    assert.equal(toColumnIndex('A', 'column'), 0);
+    assert.equal(toColumnIndex('Z', 'column'), 25);
+    assert.equal(toColumnIndex('AA', 'column'), 26);
+    assert.equal(toColumnIndex('ZZZ', 'column'), 18277);
+  });
+
+  it('前後の空白は無視する', () => {
+    assert.equal(toColumnIndex(' B ', 'column'), 1);
+  });
+
+  it('列の記号でない値は引数名を添えて弾く', () => {
+    assert.throws(() => toColumnIndex('1', 'sortSpecs[0].column'), /sortSpecs\[0\]\.column は列の記号で/);
+    assert.throws(() => toColumnIndex('A1', 'column'), /列の記号で/);
+    assert.throws(() => toColumnIndex('ZZZZ', 'column'), /列の記号で/);
+    assert.throws(() => toColumnIndex(2, 'column'), /列の記号で/);
+    assert.throws(() => toColumnIndex(undefined, 'column'), /列の記号で/);
   });
 });

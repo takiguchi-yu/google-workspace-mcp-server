@@ -176,3 +176,22 @@ export const toA1Range = (indexes: GridIndexes, sheetTitle?: string): string => 
 /** シート名を A1 記法に埋め込める形にする。記号を含む名前はクォートして `'` を重ねる */
 const quoteSheetTitle = (title: string): string =>
   /^[A-Za-z_][A-Za-z0-9_]*$/.test(title) ? title : `'${title.replaceAll("'", "''")}'`;
+
+/** 列の記号として受け付ける形。Sheets の最終列は ZZZ なので最大 3 文字 */
+const COLUMN_LETTERS_PATTERN = /^[A-Za-z]{1,3}$/;
+
+/**
+ * 列の記号だけを受け取って 0 始まりの列番号に変換する。並べ替えやフィルタの対象列を
+ * A1 記法の列（`B`、`AA`）で受けるために使う。
+ *
+ * @param value ツール引数として受け取った値
+ * @param name エラー文面に出す引数名
+ * @throws 列の記号として解釈できない値を渡した場合
+ */
+export const toColumnIndex = (value: unknown, name: string): number => {
+  if (typeof value !== 'string' || !COLUMN_LETTERS_PATTERN.test(value.trim())) {
+    throw new Error(`${name} は列の記号で指定してください（例: "A", "B", "AA"）。受け取った値: ${String(value)}`);
+  }
+
+  return columnIndexOf(value.trim());
+};

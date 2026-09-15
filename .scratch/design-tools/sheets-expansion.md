@@ -3,7 +3,7 @@
 Sheets API v4 の batchUpdate は 69 種のリクエストを持つが、0.6.2 時点のツールが使っているのは
 11 種だけだった。穴のうち「使用頻度が高く実装が軽いもの」を 3 つの塊にまとめて埋める。
 
-**Status:** 実装・点検まで完了（未リリース）
+**Status:** 完了（0.7.0 として公開済み）
 **Blocked by:** なし
 
 ## 完了条件
@@ -113,5 +113,20 @@ Sheets API v4 の batchUpdate は 69 種のリクエストを持つが、0.6.2 �
 - **`sheets_delete_dimension` / `sheets_insert_dimension` は今も `sheetId` を引数に取る。**
   今回追加した 8 本はすべてシート名・A1 記法に統一したが、既存 2 本との食い違いは
   [ADR 0001](../../docs/adr/0001-a1-notation-for-formatting-range.md) の判断のまま残している。
-- **リリースはまだ。** 0.7.0 として出すなら、`publish.yml` に入れた MCP Registry のリトライ
-  （0.6.1 で追加、0.6.2 で初めて自動で通った）がそのまま効くはず。
+- **Docker の利用手順に書いてあるイメージタグが 0.5.0 のまま**（`docs/how-to-get-token.md:69,90,113`）。
+  リリースのたびに古くなる性質の問題なので、別チケットに切った → [docs-image-tag.md](./docs-image-tag.md)。
+
+## 0.7.0 のリリース（2026-09-15）
+
+`npm version minor` → `git push origin main && git push origin --tags` で publish ワークフローが走り、
+**3 つの公開先すべてに自動で通った**（run 34919260229）。0.6.2 に続いて 2 回連続で手作業なしに終わった。
+
+| 公開先       | バージョン             | 確認方法                                                                       |
+| ------------ | ---------------------- | ------------------------------------------------------------------------------ |
+| npm          | 0.7.0                  | `npm view @takiguchi-yu/google-workspace-mcp-server version` → `0.7.0`         |
+| Docker Hub   | 0.7.0 / latest         | `takigu1/google-workspace-mcp-server` のタグ一覧に 2026-09-15T02:00 更新で存在 |
+| MCP Registry | 0.7.0（isLatest=true） | `registry.modelcontextprotocol.io/v0.1/servers?search=...`                     |
+
+コミットは機能単位に 4 つに分け、`feat/sheets-expansion` で作ってから main に fast-forward した
+（325bc19 シートのライフサイクル / dfe256c 入力規則・並べ替え・フィルタ / 69c3b13 読み取りの拡張 /
+0dce887 ドキュメント）。

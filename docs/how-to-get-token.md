@@ -66,7 +66,7 @@ mv ~/Downloads/client_secret_*.json ~/.google-workspace-mcp/credentials.json
 
 ```sh
 # DockerHub から Docker イメージを取得（タグは必ずバージョンを指定する）
-docker pull takigu1/google-workspace-mcp-server:0.7.0
+docker pull takigu1/google-workspace-mcp-server:0.8.0
 
 # 利用可能タグ一覧
 # https://hub.docker.com/r/takigu1/google-workspace-mcp-server/tags
@@ -87,7 +87,7 @@ docker pull takigu1/google-workspace-mcp-server:0.7.0
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:0.7.0 \
+  takigu1/google-workspace-mcp-server:0.8.0 \
   npm run setup -- --account work --description "会社の Google Workspace"
 ```
 
@@ -110,7 +110,7 @@ docker run -it --rm \
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:0.7.0 \
+  takigu1/google-workspace-mcp-server:0.8.0 \
   npm run setup -- --account private --description "個人の Google アカウント"
 ```
 
@@ -207,7 +207,7 @@ npm run setup -- --account private --port 8123
 docker run -it --rm \
   -p 8000:8000 \
   -v ~/.google-workspace-mcp:/app/.google-workspace-mcp \
-  takigu1/google-workspace-mcp-server:0.7.0 \
+  takigu1/google-workspace-mcp-server:0.8.0 \
   npm run setup -- --account work --force
 ```
 

@@ -72,6 +72,21 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **slides_update_shape_style** - 既存の図形の塗りと枠線を変更
 - **slides_insert_image** - 公開 URL の画像をスライドに挿入
 - **slides_replace_all_text** - プレゼンテーション内の文字列を一括置換（ひな形の差し込み）
+- **slides_add_slide** - レイアウトを選んでスライドを追加（タイトル・本文も同時に記入）
+- **slides_update_paragraph_style** - 段落の配置・行間・インデント・段落前後の空きを変更
+- **slides_create_paragraph_bullets** - 段落を箇条書き・番号付きリストにする
+- **slides_delete_paragraph_bullets** - 箇条書きを解除
+- **slides_update_element_transform** - 既存要素の位置・大きさ・回転を変更
+- **slides_update_elements_z_order** - 要素の重なり順を変更（複数まとめて）
+- **slides_add_line** - 始点・終点を指定して線・矢印を引く（色・太さ・破線も同時に）
+- **slides_group_elements** - 複数の要素を 1 つのグループにまとめる
+- **slides_ungroup_elements** - グループを解除
+- **slides_add_table** - 2 次元配列から表を追加（中身も同時に記入）
+
+寸法の単位は、`slides_add_line` / `slides_add_table` / `slides_update_element_transform` /
+`slides_update_paragraph_style` がポイント（スライドは 720 × 405 pt）、それ以前からある
+`slides_add_shape` / `slides_add_text_box` / `slides_insert_image` が EMU です。
+理由は [ADR 0004](docs/adr/0004-points-for-new-slides-tools.md) を参照してください。
 
 ### 📁 Google Drive
 

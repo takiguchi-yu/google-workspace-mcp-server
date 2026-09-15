@@ -5,22 +5,21 @@ import type { slides_v1 } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { paragraphStyleSchema, toParagraphStyle } from '../paragraph-style.js';
 import { textRangeSchema, toTextRange } from '../text-range.js';
-import { textStyleSchema, toTextStyle } from '../text-style.js';
 
 /**
- * テキストの見た目（フォント・大きさ・色・装飾）を変えるコマンド。
+ * 段落の書式（揃え・行間・インデント・段落前後の空き）を変えるコマンド。
  *
- * slides_add_text_box も作成時に見た目を受けるが、こちらは既にある要素を対象にする。
- * 一部の文字だけを変えられるのもこちらだけ。範囲を省略すると要素のテキスト全体にかかる。
- * 行の揃えや行間は文字ではなく段落の書式なので slides_update_paragraph_style が受け持つ。
+ * slides_update_text_style が受け持つのは文字 1 つ 1 つの見た目で、行の配置は変えられない。
+ * 段落は文字とは別の書式の単位なので、ツールも分けてある。
  */
-export class UpdateTextStyleCommand implements Command {
+export class UpdateParagraphStyleCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
-      name: 'slides_update_text_style',
+      name: 'slides_update_paragraph_style',
       description:
-        'Change how the text of a shape or text box looks: font family, size, color, bold, italic, underline, strikethrough. Only the properties you specify are changed. Applies to the whole text unless startIndex and endIndex are given.',
+        'Change paragraph-level formatting of a shape or text box: alignment, line spacing, indentation, and space before/after. Only the properties you specify are changed. Applies to all paragraphs unless startIndex and endIndex are given. Lengths are in points.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -32,7 +31,7 @@ export class UpdateTextStyleCommand implements Command {
             type: 'string',
             description: 'The object ID of the shape or text box holding the text.',
           },
-          ...textStyleSchema,
+          ...paragraphStyleSchema,
           ...textRangeSchema,
         },
         required: ['presentationId', 'objectId'],
@@ -51,19 +50,19 @@ export class UpdateTextStyleCommand implements Command {
       return createErrorResult('objectId が指定されていません。');
     }
 
-    let style: slides_v1.Schema$TextStyle;
+    let style: slides_v1.Schema$ParagraphStyle;
     let fields: string[];
     let textRange: slides_v1.Schema$Range;
 
     try {
-      ({ style, fields } = toTextStyle(args));
+      ({ style, fields } = toParagraphStyle(args));
       textRange = toTextRange(args.startIndex, args.endIndex);
     } catch (error) {
       return createErrorResult(error instanceof Error ? error.message : String(error));
     }
 
     if (fields.length === 0) {
-      return createErrorResult('変更する見た目を 1 つ以上指定してください（fontSize、bold、foregroundColor など）。');
+      return createErrorResult('変更する書式を 1 つ以上指定してください（alignment、lineSpacing、indentStart など）。');
     }
 
     const slides = google.slides({ version: 'v1', auth });
@@ -72,21 +71,18 @@ export class UpdateTextStyleCommand implements Command {
       await slides.presentations.batchUpdate({
         presentationId,
         requestBody: {
-          requests: [{ updateTextStyle: { objectId, style, textRange, fields: fields.join(',') } }],
+          requests: [{ updateParagraphStyle: { objectId, style, textRange, fields: fields.join(',') } }],
         },
       });
 
       return {
         content: [
-          {
-            type: 'text',
-            text: `要素 ${objectId} のテキストの見た目を更新しました。\n変更した項目: ${fields.join(', ')}`,
-          },
+          { type: 'text', text: `要素 ${objectId} の段落の書式を更新しました。\n変更した項目: ${fields.join(', ')}` },
         ],
       };
     } catch (error) {
       return createErrorResult(
-        `テキストの見た目の更新に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+        `段落の書式の更新に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

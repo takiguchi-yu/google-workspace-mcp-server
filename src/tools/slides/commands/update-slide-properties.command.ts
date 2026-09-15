@@ -13,7 +13,8 @@ export class UpdateSlidePropertiesCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_update_slide_properties',
-      description: 'Update slide-level properties like background color or apply a layout template.',
+      description:
+        'Set the background color of a single slide. This is the only slide-level property this tool changes.',
       inputSchema: {
         type: 'object',
         properties: {

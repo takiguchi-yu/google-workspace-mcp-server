@@ -1,15 +1,25 @@
 import { BaseCommandService } from '../base/service.interface.js';
+import { AddLineCommand } from './commands/add-line.command.js';
 import { AddShapeCommand } from './commands/add-shape.command.js';
+import { AddSlideCommand } from './commands/add-slide.command.js';
+import { AddTableCommand } from './commands/add-table.command.js';
 import { AddTextBoxCommand } from './commands/add-text-box.command.js';
 import { BatchUpdatePresentationCommand } from './commands/batch-update-presentation.command.js';
+import { CreateParagraphBulletsCommand } from './commands/create-paragraph-bullets.command.js';
 import { CreatePresentationCommand } from './commands/create-presentation.command.js';
 import { DeleteElementCommand } from './commands/delete-element.command.js';
+import { DeleteParagraphBulletsCommand } from './commands/delete-paragraph-bullets.command.js';
 import { DuplicateSlideCommand } from './commands/duplicate-slide.command.js';
 import { GetPageCommand } from './commands/get-page.command.js';
 import { GetPresentationCommand } from './commands/get-presentation.command.js';
+import { GroupElementsCommand } from './commands/group-elements.command.js';
 import { InsertImageCommand } from './commands/insert-image.command.js';
 import { ListPresentationsCommand } from './commands/list-presentations.command.js';
 import { ReplaceAllTextCommand } from './commands/replace-all-text.command.js';
+import { UngroupElementsCommand } from './commands/ungroup-elements.command.js';
+import { UpdateElementTransformCommand } from './commands/update-element-transform.command.js';
+import { UpdateElementsZOrderCommand } from './commands/update-elements-z-order.command.js';
+import { UpdateParagraphStyleCommand } from './commands/update-paragraph-style.command.js';
 import { UpdateShapeStyleCommand } from './commands/update-shape-style.command.js';
 import { UpdateSlidePropertiesCommand } from './commands/update-slide-properties.command.js';
 import { UpdateTextShapeCommand } from './commands/update-text-shape.command.js';
@@ -39,5 +49,15 @@ export class SlidesService extends BaseCommandService {
     this.registerCommand(new UpdateShapeStyleCommand());
     this.registerCommand(new InsertImageCommand());
     this.registerCommand(new ReplaceAllTextCommand());
+    this.registerCommand(new AddSlideCommand());
+    this.registerCommand(new UpdateParagraphStyleCommand());
+    this.registerCommand(new CreateParagraphBulletsCommand());
+    this.registerCommand(new DeleteParagraphBulletsCommand());
+    this.registerCommand(new UpdateElementTransformCommand());
+    this.registerCommand(new UpdateElementsZOrderCommand());
+    this.registerCommand(new AddLineCommand());
+    this.registerCommand(new GroupElementsCommand());
+    this.registerCommand(new UngroupElementsCommand());
+    this.registerCommand(new AddTableCommand());
   }
 }

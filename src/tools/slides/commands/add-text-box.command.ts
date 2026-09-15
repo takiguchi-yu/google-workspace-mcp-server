@@ -1,18 +1,30 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { OAuth2Client } from 'google-auth-library';
 import { google } from 'googleapis';
+import type { slides_v1 } from 'googleapis';
 import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
+import { pickOptionalEnum } from '../enum-argument.js';
+import { ALIGNMENTS } from '../paragraph-style.js';
+import { textStyleSchema, toTextStyle } from '../text-style.js';
 
 /**
- * スライドに新しいテキストボックスを追加するコマンド
+ * スライドに新しいテキストボックスを追加するコマンド。
+ *
+ * 文字の見た目と段落の揃えも同じ呼び出しで指定できる。作った objectId を受け取ってから
+ * slides_update_text_style をもう 1 回呼ぶ往復を省くため。
+ *
+ * **位置と大きさは EMU で受ける。** 0.8.0 で追加したツールはポイントで受けるが、
+ * このツールは 0.4.0 から EMU で公開しており、単位を変えると既存の呼び出しが黙って
+ * 72 分の 1 の大きさになるため据え置いている（docs/adr/0004-points-for-new-slides-tools.md）。
  */
 export class AddTextBoxCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
       name: 'slides_add_text_box',
-      description: 'Add a new text box to a slide with custom position and content.',
+      description:
+        'Add a new text box to a slide with custom position and content. Font, color, and paragraph alignment can be set here too. Position and size are in EMUs (1 inch = 914400 EMU, 1 pt = 12700 EMU); the newer slides_add_line and slides_add_table take points instead.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -48,6 +60,12 @@ export class AddTextBoxCommand implements Command {
             description: 'Box height in EMUs. Defaults to 914400 (1 inch).',
             default: 914_400,
           },
+          ...textStyleSchema,
+          alignment: {
+            type: 'string',
+            description: 'Horizontal alignment of the text. START is left in a left-to-right language.',
+            enum: [...ALIGNMENTS],
+          },
         },
         required: ['presentationId', 'pageObjectId', 'text'],
       },
@@ -73,45 +91,54 @@ export class AddTextBoxCommand implements Command {
       return createErrorResult('text が指定されていません。');
     }
 
+    const objectId = `textbox_${String(Date.now())}`;
+    const requests: slides_v1.Schema$Request[] = [
+      {
+        createShape: {
+          objectId,
+          shapeType: 'TEXT_BOX',
+          elementProperties: {
+            pageObjectId,
+            // 大きさは size で渡す。transform の scale は倍率（スカラー）であって寸法ではない
+            size: {
+              width: { magnitude: width, unit: 'EMU' },
+              height: { magnitude: height, unit: 'EMU' },
+            },
+            transform: { scaleX: 1, scaleY: 1, translateX: left, translateY: top, unit: 'EMU' },
+          },
+        },
+      },
+      { insertText: { objectId, text } },
+    ];
+
+    try {
+      const { style, fields } = toTextStyle(args);
+
+      if (fields.length > 0) {
+        requests.push({ updateTextStyle: { objectId, style, textRange: { type: 'ALL' }, fields: fields.join(',') } });
+      }
+
+      const alignment = pickOptionalEnum(args.alignment, ALIGNMENTS, 'alignment');
+
+      if (alignment !== undefined) {
+        requests.push({
+          updateParagraphStyle: { objectId, style: { alignment }, textRange: { type: 'ALL' }, fields: 'alignment' },
+        });
+      }
+    } catch (error) {
+      return createErrorResult(error instanceof Error ? error.message : String(error));
+    }
+
     const slides = google.slides({ version: 'v1', auth });
 
     try {
-      const shapeObjectId = `textbox_${Date.now()}`;
-      const requests = [
-        {
-          createShape: {
-            objectId: shapeObjectId,
-            shapeType: 'TEXT_BOX',
-            elementProperties: {
-              pageObjectId,
-              // 大きさは size で渡す。transform の scale は倍率（スカラー）であって寸法ではない
-              size: {
-                width: { magnitude: width, unit: 'EMU' },
-                height: { magnitude: height, unit: 'EMU' },
-              },
-              transform: { scaleX: 1, scaleY: 1, translateX: left, translateY: top, unit: 'EMU' },
-            },
-          },
-        },
-        {
-          insertText: {
-            objectId: shapeObjectId,
-            text,
-          },
-        },
-      ];
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (slides.presentations as any).batchUpdate({
-        presentationId,
-        requestBody: { requests },
-      });
+      await slides.presentations.batchUpdate({ presentationId, requestBody: { requests } });
 
       return {
         content: [
           {
             type: 'text',
-            text: `テキストボックスを追加しました。\nプレゼンテーションID: ${presentationId}`,
+            text: `テキストボックスを追加しました。\nプレゼンテーションID: ${presentationId}\nobjectId: ${objectId}`,
           },
         ],
       };

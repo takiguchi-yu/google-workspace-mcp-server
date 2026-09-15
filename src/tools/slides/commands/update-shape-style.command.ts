@@ -6,12 +6,8 @@ import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
 import { hexToRgb } from '../../shared/color.js';
-
-/** 枠線の種類。Slides API の DashStyle から、未指定を表す値を除いたもの */
-const DASH_STYLES = ['SOLID', 'DOT', 'DASH', 'DASH_DOT', 'LONG_DASH', 'LONG_DASH_DOT'] as const;
-
-/** 1 ポイントあたりの EMU。Slides の寸法は EMU だが、枠線の太さはポイントで指定させる */
-const EMU_PER_POINT = 12_700;
+import { EMU_PER_POINT } from '../dimensions.js';
+import { DASH_STYLES } from '../line-style.js';
 
 /**
  * 既存の図形の塗りと枠線を変えるコマンド。

@@ -4,24 +4,25 @@ Slides API v1 の 43 種のリクエストのうち、0.7.0 時点のツール�
 文字単位のスタイルはあるのに段落単位が丸ごと無く、スライドは複製でしか増やせない。
 装飾の穴を 10 本のツールで埋める。
 
-**Status:** 未着手（設計は合意済み）
+**Status:** 実装・実機点検まで完了。リリース（push）待ち
 **Blocked by:** なし
 
 ## 完了条件
 
-- [ ] スライドの追加 — `slides_add_slide`（レイアウト指定、タイトル・本文まで 1 回で埋める）
-- [ ] 段落 3 本 — `slides_update_paragraph_style` / `slides_create_paragraph_bullets` / `slides_delete_paragraph_bullets`
-- [ ] 図形の周辺 5 本 — `slides_update_element_transform` / `slides_update_elements_z_order` / `slides_add_line` / `slides_group_elements` / `slides_ungroup_elements`
-- [ ] 表 1 本 — `slides_add_table`（2 次元配列で中身ごと）
-- [ ] `slides_add_text_box` に文字スタイルと段落の配置を足す
-- [ ] `slides_update_slide_properties` の description から未実装の記述を削る
-- [ ] `slides_add_shape` の `strokeWidth` の説明を「12700 EMU = 1pt」と分かる表記にする（値は変えない）
-- [ ] 新ツールの寸法を PT に統一し、判断を ADR 0002 に記録する
-- [ ] 純粋関数にテストを書く
-- [ ] README / class-diagram / CONTEXT.md を更新する
-- [ ] `npm run type-check` / `lint` / `format:check` / `test` が通る
-- [ ] 実機で全ツールを通す。正常系・異常系に加えて **enum は全値を通す**
-- [ ] 0.8.0 としてリリースする
+- [x] スライドの追加 — `slides_add_slide`（レイアウト指定、タイトル・本文まで 1 回で埋める）
+- [x] 段落 3 本 — `slides_update_paragraph_style` / `slides_create_paragraph_bullets` / `slides_delete_paragraph_bullets`
+- [x] 図形の周辺 5 本 — `slides_update_element_transform` / `slides_update_elements_z_order` / `slides_add_line` / `slides_group_elements` / `slides_ungroup_elements`
+- [x] 表 1 本 — `slides_add_table`（2 次元配列で中身ごと）
+- [x] `slides_add_text_box` に文字スタイルと段落の配置を足す
+- [x] `slides_update_slide_properties` の description から未実装の記述を削る
+- [x] `slides_add_shape` の `strokeWidth` の説明を「12700 EMU = 1pt」と分かる表記にする（値は変えない）
+- [x] 新ツールの寸法を PT に統一し、判断を ADR に記録する — **ADR 0002 ではなく 0004**。
+      起票時点では 0002 が空いていたが、Docs の作業で 0002 / 0003 が埋まったため次の空き番号を使った
+- [x] 純粋関数にテストを書く — 11 モジュール、222 件が通る
+- [x] README / class-diagram / CONTEXT.md を更新する
+- [x] `npm run type-check` / `lint` / `format:check` / `test` が通る
+- [x] 実機で全ツールを通す。正常系・異常系に加えて **enum は全値を通す**
+- [ ] 0.8.0 としてリリースする — `npm version minor` と push が残り
 
 ## 設計パス
 
@@ -121,3 +122,69 @@ Slides API v1 の 43 種のリクエストのうち、0.7.0 時点のツール�
 ## 着手できる条件
 
 いつでも着手できる。実機点検には Google アカウントと、検証用のプレゼンテーションを 1 枚作れることが要る。
+
+## 実測で確かめたこと
+
+実機点検は `SlidesService` を直接呼ぶ使い捨てスクリプトで回した（ツール定義ではなく
+コマンドの実装をそのまま通すため）。検証用プレゼンテーション 2 枚を作成。
+
+| 確かめたこと                                   | 結果                                                                                                                                                            |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `predefinedLayout` の全値                      | 11 値すべて通った                                                                                                                                               |
+| `bulletPreset` の全値                          | 15 値すべて通った                                                                                                                                               |
+| z-order の `operation` の全値                  | 4 値すべて通った                                                                                                                                                |
+| `dashStyle` / `startArrow` / `endArrow` の全値 | 6 値 / 10 値すべて通った                                                                                                                                        |
+| 線の `category`                                | STRAIGHT / BENT / CURVED すべて通った。非推奨の `category` も受ける                                                                                             |
+| **負の `scale` を API が受けるか**             | **受ける。** `scaleX: -1` が `-0.4233` として保存され、読み返しでも残る。始点・終点で線を見せる設計は成立する                                                   |
+| `createTable` がサイズ省略時にどこへ置くか     | スライド中央。幅 570pt 固定、1 行 30pt。位置・サイズを渡すと `size`/`transform` ではなく列幅・行高に反映される                                                  |
+| レイアウトごとのプレースホルダ                 | 決め打ちできない。`TITLE` のタイトルは `CENTERED_TITLE`、`CAPTION_ONLY` にタイトルは無く、`BLANK` は両方無い。実在しない枠を指定すると batchUpdate ごと失敗する |
+| objectId の長さ                                | **5 文字以上**でないと弾かれる（`The object ID (b_0) length should not be less than 5.`）                                                                       |
+| `updatePageElementTransform` の逆算            | `newScale = 目標寸法(EMU) / size`。`size` は作成時に何を渡しても 3000000 EMU に正規化される。回転は行列に織り込め、読み返しても 4 桁の丸めの範囲で戻る          |
+
+通過件数: 純粋関数のテスト 197 件、実機点検 138 件（正常系・異常系・enum 全値）。
+
+## 決めたことの追加分
+
+- **レイアウトのプレースホルダは決め打ちの対応表にせず、実行のたびに API から引く。**
+  テーマを差し替えたプレゼンテーションでも「このレイアウトに本文の枠は無い」を、
+  batchUpdate を投げる前に言えるようにするため。ADR 0001 が `sheetId` を毎回引くのと同じ判断。
+- **`toTextRange` は片方だけの範囲指定を弾く。** 0.7.0 の `slides_update_text_style` は
+  `startIndex` だけ渡されると黙って全体にかけていた。戻す手立てが無いまま全文の見た目が
+  変わるため、共有ヘルパーに寄せる際にエラーへ変えた。**既存ツールのふるまいが変わる唯一の箇所。**
+- **`update_paragraph_style` に `direction` は出さない。** 「決めたこと」表の要点は
+  配置・行間・インデント・段落前後の空きの 4 つ。実機では通ることを確かめたが、
+  頼まれていないものを増やさない判断で落とした。
+
+## レビューで見つけて直したこと
+
+`/code-review` を Standards / Spec の 2 軸で回し、次を直した。
+
+1. **（重大）負の scale を持つ線を `slides_update_element_transform` で動かすと裏返っていた。**
+   行列を `hypot` と `atan2` だけで分解していたため、鏡映（片方の軸だけが負）を
+   「180 度の回転」と読み違え、再構成でもう一方の軸まで反転させていた。
+   倍率の符号を**行列式から戻す**ように直した（`det = sx · sy`）。
+   6 方向の線について、位置を変えても大きさを変えても向きが残ることを実機で確認。
+2. **`slides_add_table` で `width` だけ渡すと表が左上へ飛んでいた。** 説明文の
+   「省略したら中央」と食い違っていたので、省略された辺を中央寄せとして計算するようにした。
+   幅だけ 300pt を渡したとき left=210 / top=172.5 になることを実機で確認。
+3. **`presentation_lookup` の field マスクが広すぎた。**
+   `slides(objectId,pageElements)` を `slides/pageElements(objectId,size,transform,elementGroup)` に絞った。
+   グループの中の要素も引けることを実機で確認。
+4. **列挙とヘルパーの重複を寄せた。** `ALIGNMENTS` を `paragraph-style.ts`、
+   `DASH_STYLES` / `ARROW_STYLES` / `LINE_CATEGORIES` を `line-style.ts` に集約。
+   数値引数の検証は `dimensions.ts` から `number-argument.ts` に切り出した
+   （寸法以外の rotation・lineSpacing・insertionIndex にも使うため）。
+5. **`dimensions.ts` の未使用 export を配線した。** `toElementProperties` / `pointBoxSchema` /
+   `SLIDE_WIDTH_PT` / `SLIDE_HEIGHT_PT` は `slides_add_table` の中央寄せで使うようになった。
+   使い道の無かった `toNumber` の第 3 引数（fallback）は削除。
+6. **CONTEXT.md の「配置」の _Avoid_ に `transform` の扱いを書き足した。**
+   ツール名 `slides_update_element_transform` が API の綴りを使う以上、
+   禁止語のままでは自分の規定を自分で破ることになるため。
+
+## 申し送り
+
+- **表の罫線・セルの塗り**、**画像の装飾**、**コネクタ（`rerouteLine`）** は今回の対象外のまま。
+  起票は 0.8.0 のリリース後に、実際に困った場面が出てから行う。
+- **objectId は `${prefix}_${Date.now()}` のまま。** 同じミリ秒に 2 回呼ぶと衝突するが、
+  衝突しても API が「その objectId は既にある」と断るだけでデータは壊れない。
+  既存の `add_shape` / `add_text_box` と同じ流儀に合わせた。

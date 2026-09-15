@@ -80,7 +80,7 @@ export class AddShapeCommand implements Command {
           },
           strokeWidth: {
             type: 'number',
-            description: 'Border width in EMUs. Defaults to 12700 (0.014 inches).',
+            description: 'Border width in EMUs (12700 EMU = 1 pt). Defaults to 12700, which is 1 pt.',
             default: 12_700,
           },
         },

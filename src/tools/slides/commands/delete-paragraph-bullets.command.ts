@@ -6,21 +6,19 @@ import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
 import { textRangeSchema, toTextRange } from '../text-range.js';
-import { textStyleSchema, toTextStyle } from '../text-style.js';
 
 /**
- * テキストの見た目（フォント・大きさ・色・装飾）を変えるコマンド。
+ * 箇条書きを解除するコマンド。
  *
- * slides_add_text_box も作成時に見た目を受けるが、こちらは既にある要素を対象にする。
- * 一部の文字だけを変えられるのもこちらだけ。範囲を省略すると要素のテキスト全体にかかる。
- * 行の揃えや行間は文字ではなく段落の書式なので slides_update_paragraph_style が受け持つ。
+ * slides_create_paragraph_bullets の対になる操作を別ツールにしてある。
+ * 設定ツールの引数の省略が解除に化けると、戻す手立てのないまま体裁が消えるため。
  */
-export class UpdateTextStyleCommand implements Command {
+export class DeleteParagraphBulletsCommand implements Command {
   getToolDefinition(): ToolDefinition {
     return {
-      name: 'slides_update_text_style',
+      name: 'slides_delete_paragraph_bullets',
       description:
-        'Change how the text of a shape or text box looks: font family, size, color, bold, italic, underline, strikethrough. Only the properties you specify are changed. Applies to the whole text unless startIndex and endIndex are given.',
+        'Remove bullets or numbering from the paragraphs of a shape or text box, keeping the text. The paragraphs keep the indentation the bullets gave them. Applies to all paragraphs unless startIndex and endIndex are given.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -32,7 +30,6 @@ export class UpdateTextStyleCommand implements Command {
             type: 'string',
             description: 'The object ID of the shape or text box holding the text.',
           },
-          ...textStyleSchema,
           ...textRangeSchema,
         },
         required: ['presentationId', 'objectId'],
@@ -51,19 +48,12 @@ export class UpdateTextStyleCommand implements Command {
       return createErrorResult('objectId が指定されていません。');
     }
 
-    let style: slides_v1.Schema$TextStyle;
-    let fields: string[];
     let textRange: slides_v1.Schema$Range;
 
     try {
-      ({ style, fields } = toTextStyle(args));
       textRange = toTextRange(args.startIndex, args.endIndex);
     } catch (error) {
       return createErrorResult(error instanceof Error ? error.message : String(error));
-    }
-
-    if (fields.length === 0) {
-      return createErrorResult('変更する見た目を 1 つ以上指定してください（fontSize、bold、foregroundColor など）。');
     }
 
     const slides = google.slides({ version: 'v1', auth });
@@ -71,22 +61,13 @@ export class UpdateTextStyleCommand implements Command {
     try {
       await slides.presentations.batchUpdate({
         presentationId,
-        requestBody: {
-          requests: [{ updateTextStyle: { objectId, style, textRange, fields: fields.join(',') } }],
-        },
+        requestBody: { requests: [{ deleteParagraphBullets: { objectId, textRange } }] },
       });
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `要素 ${objectId} のテキストの見た目を更新しました。\n変更した項目: ${fields.join(', ')}`,
-          },
-        ],
-      };
+      return { content: [{ type: 'text', text: `要素 ${objectId} の箇条書きを解除しました。` }] };
     } catch (error) {
       return createErrorResult(
-        `テキストの見た目の更新に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+        `箇条書きの解除に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }

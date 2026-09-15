@@ -7,6 +7,8 @@ import { ClearSheetValuesCommand } from './commands/clear-sheet-values.command.j
 import { CreateSpreadsheetCommand } from './commands/create-spreadsheet.command.js';
 import { DeleteConditionalFormatCommand } from './commands/delete-conditional-format.command.js';
 import { DeleteDimensionCommand } from './commands/delete-dimension.command.js';
+import { DeleteSheetCommand } from './commands/delete-sheet.command.js';
+import { DuplicateSheetCommand } from './commands/duplicate-sheet.command.js';
 import { FormatCellsCommand } from './commands/format-cells.command.js';
 import { FreezePanesCommand } from './commands/freeze-panes.command.js';
 import { GetSpreadsheetInfoCommand } from './commands/get-spreadsheet-info.command.js';
@@ -18,6 +20,7 @@ import { MergeCellsCommand } from './commands/merge-cells.command.js';
 import { ReadSheetValuesCommand } from './commands/read-sheet-values.command.js';
 import { ResizeDimensionCommand } from './commands/resize-dimension.command.js';
 import { SetBordersCommand } from './commands/set-borders.command.js';
+import { UpdateSheetPropertiesCommand } from './commands/update-sheet-properties.command.js';
 import { UpdateSheetValuesCommand } from './commands/update-sheet-values.command.js';
 
 /**
@@ -36,6 +39,9 @@ export class SheetsService extends BaseCommandService {
     this.registerCommand(new BatchUpdateSheetValuesCommand());
     this.registerCommand(new CreateSpreadsheetCommand());
     this.registerCommand(new AddSheetCommand());
+    this.registerCommand(new DeleteSheetCommand());
+    this.registerCommand(new DuplicateSheetCommand());
+    this.registerCommand(new UpdateSheetPropertiesCommand());
     this.registerCommand(new AppendSheetValuesCommand());
     this.registerCommand(new ClearSheetValuesCommand());
     this.registerCommand(new ImportSheetCsvCommand());

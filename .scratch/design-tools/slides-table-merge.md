@@ -4,7 +4,7 @@
 0.9.0 の表の書式 5 本からは外した。
 
 **Status:** 未着手
-**Blocked by:** 0.9.0 の表の書式（`.scratch/design-tools/slides-tables-and-connectors.md`）
+**Blocked by:** なし（0.9.0 で表の書式が出たため、着手できる）
 
 ## 完了条件
 
@@ -25,5 +25,5 @@ Slides API の `TableRange` の説明に「テーブル範囲が指すセルは�
 
 ## 着手できる条件
 
-0.9.0 の `slides_update_table_cells` / `slides_update_table_borders` が出ていること。
-結合済みの表で範囲指定がどう解釈されるかを実機で確かめてから設計する。
+満たしている。0.9.0 で `slides_update_table_cells` / `slides_update_table_borders` が出た。
+結合済みの表で A1 記法の範囲がどう解釈されるかを実機で確かめてから設計する。

@@ -3,10 +3,18 @@
  *
  * 書式のリクエストは範囲を GridRange（0 始まり・終端は含まない行列番号）で受け取るが、
  * ツールの引数はすべて A1 記法に統一しているため、この橋渡しが要る。
- * 番号への変換はこのモジュールに閉じ、API の呼び出しも sheetId の解決も持ち込まない。
+ * API の呼び出しも sheetId の解決も持ち込まない。
+ *
+ * 列の記号と番号の対応は Slides の表の範囲とも共用するので shared に置いてある。
+ * 呼び出し元がそのまま使えるよう、ここから再輸出する。
  */
 
 import { cellReferenceOf } from './a1-range.js';
+import { columnIndexOf, columnLettersOf } from '../shared/column-letters.js';
+
+// 列の記号の変換は Slides の表とも共用するため shared に置いた。
+// 既存の呼び出し元がそのまま使えるよう、ここから再輸出する
+export { columnIndexOf, columnLettersOf };
 
 /**
  * GridRange のうち、A1 記法だけから決まる部分。
@@ -23,9 +31,6 @@ export interface GridIndexes {
 
 /** `A1` / `B` / `10` のいずれか。列は最大 3 文字（Sheets の最終列は ZZZ） */
 const CELL_PATTERN = /^([A-Za-z]{1,3})?([0-9]+)?$/;
-
-/** アルファベットの桁数。列番号は 26 進数（A=1）で数える */
-const LETTER_RADIX = 26;
 
 /**
  * A1 記法の範囲を行列番号に変換する。シート名は付いていてもよく、付いていれば無視する。
@@ -63,21 +68,6 @@ export const toGridIndexes = (range: string): GridIndexes => {
 
     throw error;
   }
-};
-
-/**
- * 列の記号を 0 始まりの列番号に変換する。`A` は 0、`Z` は 25、`AA` は 26。
- *
- * @param letters 列の記号。大文字小文字は問わない
- */
-export const columnIndexOf = (letters: string): number => {
-  let index = 0;
-
-  for (const letter of letters.toUpperCase()) {
-    index = index * LETTER_RADIX + (letter.codePointAt(0)! - 'A'.codePointAt(0)! + 1);
-  }
-
-  return index - 1;
 };
 
 /** 範囲を始点と終点に分ける。`:` が無ければ単一セルとして同じ値を両端に置く */
@@ -131,21 +121,6 @@ const span = (
   }
 
   return {};
-};
-
-/**
- * 0 始まりの列番号を列の記号に戻す。0 は `A`、25 は `Z`、26 は `AA`。
- *
- * @param index 0 始まりの列番号
- */
-export const columnLettersOf = (index: number): string => {
-  let letters = '';
-
-  for (let remaining = index; remaining >= 0; remaining = Math.floor(remaining / LETTER_RADIX) - 1) {
-    letters = String.fromCodePoint((remaining % LETTER_RADIX) + 'A'.codePointAt(0)!) + letters;
-  }
-
-  return letters;
 };
 
 /**

@@ -40,3 +40,57 @@ describe('toTextStyle', () => {
     assert.deepEqual(fields, ['bold', 'fontFamily']);
   });
 });
+
+describe('toTextStyle（0.9.0 で足した項目）', () => {
+  it('スモールキャップスを拾う', () => {
+    const { style, fields } = toTextStyle({ smallCaps: true });
+
+    assert.equal(style.smallCaps, true);
+    assert.deepEqual(fields, ['smallCaps']);
+  });
+
+  it('上付き・下付きを拾う', () => {
+    for (const baselineOffset of ['NONE', 'SUPERSCRIPT', 'SUBSCRIPT']) {
+      assert.equal(toTextStyle({ baselineOffset }).style.baselineOffset, baselineOffset);
+    }
+  });
+
+  it('列挙に無い上付き指定を弾く', () => {
+    assert.throws(() => toTextStyle({ baselineOffset: 'SUPER' }), /baselineOffset は NONE \/ SUPERSCRIPT \/ SUBSCRIPT/);
+  });
+
+  it('フォントの太さを fontFamily と組にして入れる', () => {
+    const { style, fields } = toTextStyle({ fontFamily: 'Roboto', fontWeight: 700 });
+
+    assert.deepEqual(style.weightedFontFamily, { fontFamily: 'Roboto', weight: 700 });
+    assert.ok(fields.includes('weightedFontFamily'));
+    assert.ok(fields.includes('fontFamily'));
+  });
+
+  it('100 刻みでない太さを弾く（実機で 450 が拒否されるため）', () => {
+    assert.throws(() => toTextStyle({ fontFamily: 'Roboto', fontWeight: 450 }), /fontWeight は 100 \/ 200/);
+    assert.throws(() => toTextStyle({ fontFamily: 'Roboto', fontWeight: 1000 }), /fontWeight は 100 \/ 200/);
+  });
+
+  it('fontFamily を伴わない太さの指定を弾く（API が組で受け取るため）', () => {
+    assert.throws(() => toTextStyle({ fontWeight: 700 }), /fontFamily も渡してください/);
+  });
+
+  it('リンクを張る', () => {
+    const { style, fields } = toTextStyle({ link: 'https://example.com' });
+
+    assert.deepEqual(style.link, { url: 'https://example.com' });
+    assert.deepEqual(fields, ['link']);
+  });
+
+  it('NONE でリンクを消す（値を送らず項目名だけ載せる）', () => {
+    const { style, fields } = toTextStyle({ link: 'NONE' });
+
+    assert.equal(style.link, undefined);
+    assert.deepEqual(fields, ['link']);
+  });
+
+  it('大文字小文字を問わず NONE として読む', () => {
+    assert.equal(toTextStyle({ link: 'none' }).style.link, undefined);
+  });
+});

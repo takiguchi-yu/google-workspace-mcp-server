@@ -82,6 +82,13 @@ Google Workspace MCP Server は、GitHub Copilot などの AI アシスタント
 - **slides_group_elements** - 複数の要素を 1 つのグループにまとめる
 - **slides_ungroup_elements** - グループを解除
 - **slides_add_table** - 2 次元配列から表を追加（中身も同時に記入）
+- **slides_update_table_cells** - 表のセルの塗りと縦揃えを変更（範囲は A1 記法）
+- **slides_update_table_borders** - 表に罫線を引く（全体・外周・内側・各辺を指定可）
+- **slides_resize_table** - 表の行の高さ・列の幅を変更
+- **slides_insert_table_dimension** - 表に行・列を挿入
+- **slides_delete_table_dimension** - 表から行・列を削除
+- **slides_connect_line** - 線の端を図形に繋ぐ（図形を動かすと線が追随）
+- **slides_disconnect_line** - 線と図形の接続を外す
 
 寸法の単位は、`slides_add_line` / `slides_add_table` / `slides_update_element_transform` /
 `slides_update_paragraph_style` がポイント（スライドは 720 × 405 pt）、それ以前からある

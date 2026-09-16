@@ -6,7 +6,9 @@ import type { ToolArgs, ToolDefinition } from '../../../types/mcp.js';
 import type { Command } from '../../base/command.interface.js';
 import { createErrorResult } from '../../base/command.interface.js';
 import { hexToRgb } from '../../shared/color.js';
+import { CONTENT_ALIGNMENTS } from '../content-alignment.js';
 import { EMU_PER_POINT } from '../dimensions.js';
+import { pickEnum } from '../enum-argument.js';
 import { DASH_STYLES } from '../line-style.js';
 
 /**
@@ -19,7 +21,7 @@ export class UpdateShapeStyleCommand implements Command {
     return {
       name: 'slides_update_shape_style',
       description:
-        'Change the fill and outline of an existing shape or text box. Only the properties you specify are changed. Use fillColor "NONE" or outlineColor "NONE" to make them transparent.',
+        'Change the look of an existing shape or text box: fill, outline, where its text sits vertically, and whether it links somewhere. Only the properties you specify are changed. Use fillColor "NONE" or outlineColor "NONE" to make them transparent, and link "NONE" to remove a link.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -47,6 +49,15 @@ export class UpdateShapeStyleCommand implements Command {
             type: 'string',
             description: 'Outline line style.',
             enum: [...DASH_STYLES],
+          },
+          contentAlignment: {
+            type: 'string',
+            description: 'Where the text sits vertically inside the shape.',
+            enum: [...CONTENT_ALIGNMENTS],
+          },
+          link: {
+            type: 'string',
+            description: 'Make the shape a hyperlink to this URL. Use "NONE" to remove an existing link.',
           },
         },
         required: ['presentationId', 'objectId'],
@@ -87,6 +98,19 @@ export class UpdateShapeStyleCommand implements Command {
       if (outlineColor !== undefined || outlineWeight !== undefined || outlineDashStyle !== undefined) {
         shapeProperties.outline = toOutline(outlineColor, outlineWeight, outlineDashStyle);
         fields.push('outline');
+      }
+
+      if (args.contentAlignment !== undefined) {
+        shapeProperties.contentAlignment = pickEnum(args.contentAlignment, CONTENT_ALIGNMENTS, 'contentAlignment');
+        fields.push('contentAlignment');
+      }
+
+      if (typeof args.link === 'string') {
+        // 項目名だけを fields に載せて値を省くと、その項目が消える
+        if (args.link.toUpperCase() !== 'NONE') {
+          shapeProperties.link = { url: args.link };
+        }
+        fields.push('link');
       }
     } catch (error) {
       return createErrorResult(error instanceof Error ? error.message : String(error));

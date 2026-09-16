@@ -1,24 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { columnIndexOf, columnLettersOf, toA1Range, toColumnIndex, toGridIndexes } from './grid-range.js';
-
-describe('columnIndexOf', () => {
-  it('1 文字の列を 0 始まりの番号に変換する', () => {
-    assert.equal(columnIndexOf('A'), 0);
-    assert.equal(columnIndexOf('Z'), 25);
-  });
-
-  it('2 文字以上の列を 26 進数として数える', () => {
-    assert.equal(columnIndexOf('AA'), 26);
-    assert.equal(columnIndexOf('AZ'), 51);
-    assert.equal(columnIndexOf('BA'), 52);
-    assert.equal(columnIndexOf('ZZZ'), 18277);
-  });
-
-  it('小文字も受け付ける', () => {
-    assert.equal(columnIndexOf('ab'), columnIndexOf('AB'));
-  });
-});
+import { toA1Range, toColumnIndex, toGridIndexes } from './grid-range.js';
 
 describe('toGridIndexes', () => {
   it('両端を指定した範囲を行列番号に変換する', () => {
@@ -72,22 +54,6 @@ describe('toGridIndexes', () => {
   it('範囲として解釈できない文字列は受け付けない', () => {
     assert.throws(() => toGridIndexes('Sheet1!A1:B2:C3'), /範囲を解釈できません/);
     assert.throws(() => toGridIndexes('Sheet1!1A'), /範囲を解釈できません/);
-  });
-});
-
-describe('columnLettersOf', () => {
-  it('列番号を記号に戻す', () => {
-    assert.equal(columnLettersOf(0), 'A');
-    assert.equal(columnLettersOf(25), 'Z');
-    assert.equal(columnLettersOf(26), 'AA');
-    assert.equal(columnLettersOf(51), 'AZ');
-    assert.equal(columnLettersOf(18277), 'ZZZ');
-  });
-
-  it('columnIndexOf と往復する', () => {
-    for (const letters of ['A', 'M', 'Z', 'AA', 'BQ', 'ZZ', 'ABC']) {
-      assert.equal(columnLettersOf(columnIndexOf(letters)), letters);
-    }
   });
 });
 

@@ -1,6 +1,7 @@
 import type { slides_v1 } from 'googleapis';
 import type { ElementGeometry } from './element-transform.js';
 import type { PlaceholderRef } from './layout-placeholders.js';
+import type { TableSize } from './table-range.js';
 
 /**
  * プレゼンテーションの現状を API から引くモジュール。
@@ -103,4 +104,48 @@ export const fetchLayoutPlaceholders = async (
     const placeholder = element.shape?.placeholder;
     return typeof placeholder?.type === 'string' ? [{ type: placeholder.type, index: placeholder.index ?? 0 }] : [];
   });
+};
+
+/**
+ * 表の行数と列数を引く。
+ *
+ * Slides の TableRange は「始点 + 行数・列数」で、**行数・列数は必ず正の数**でなければ
+ * ならない（省略も 0 も API に拒否される）。`A:C` のように端が開いた範囲を A1 記法で
+ * 受ける以上、閉じる先の大きさをここで読む必要がある。
+ *
+ * @param slides 認証済みの Slides API クライアント
+ * @param presentationId 対象のプレゼンテーション
+ * @param objectId 表の objectId
+ * @throws 表が見つからない、または表でない要素を指していた場合
+ */
+export const fetchTableSize = async (
+  slides: slides_v1.Slides,
+  presentationId: string,
+  objectId: string,
+): Promise<TableSize> => {
+  const response = await slides.presentations.get({
+    presentationId,
+    fields: 'slides/pageElements(objectId,table(rows,columns),elementGroup)',
+  });
+
+  for (const slide of response.data.slides ?? []) {
+    const found = findElement(slide.pageElements ?? [], objectId);
+
+    if (found === undefined) {
+      continue;
+    }
+    const { rows, columns } = found.table ?? {};
+
+    if (typeof rows !== 'number' || typeof columns !== 'number') {
+      throw new Error(`要素 ${objectId} は表ではありません。slides_get_page で表の objectId を確かめてください。`);
+    }
+
+    if (rows < 1 || columns < 1) {
+      throw new Error(`表 ${objectId} に行または列がありません。`);
+    }
+
+    return { rows, columns };
+  }
+
+  throw new Error(`表 ${objectId} が見つかりません。slides_get_page で objectId を確かめてください。`);
 };

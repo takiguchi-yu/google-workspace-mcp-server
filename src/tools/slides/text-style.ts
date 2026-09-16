@@ -1,4 +1,6 @@
 import type { slides_v1 } from 'googleapis';
+import { pickOptionalEnum } from './enum-argument.js';
+import { toOptionalNumber } from './number-argument.js';
 import type { ToolArgs } from '../../types/mcp.js';
 import { hexToRgb } from '../shared/color.js';
 
@@ -10,6 +12,12 @@ import { hexToRgb } from '../shared/color.js';
  * 受け取って次の呼び出しに渡す往復を減らすため。
  */
 
+/** 文字の縦のずらし方。Slides API の BaselineOffset から、未指定を表す値を除いたもの */
+export const BASELINE_OFFSETS = ['NONE', 'SUPERSCRIPT', 'SUBSCRIPT'] as const;
+
+/** 指定できるフォントの太さ。実機で確かめたところ 100 刻みのみで、450 は拒否される */
+const FONT_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
 /** 文字の見た目の引数スキーマ。ツール定義から展開して使う */
 export const textStyleSchema = {
   fontFamily: { type: 'string', description: 'Font family name (e.g., "Roboto", "Noto Sans JP").' },
@@ -20,6 +28,21 @@ export const textStyleSchema = {
   italic: { type: 'boolean', description: 'Whether the text is italic.' },
   underline: { type: 'boolean', description: 'Whether the text is underlined.' },
   strikethrough: { type: 'boolean', description: 'Whether the text has a strikethrough.' },
+  smallCaps: { type: 'boolean', description: 'Whether lowercase letters are rendered as smaller capitals.' },
+  baselineOffset: {
+    type: 'string',
+    description: 'Raises or lowers the text. Superscript and subscript are also rendered smaller.',
+    enum: [...BASELINE_OFFSETS],
+  },
+  fontWeight: {
+    type: 'number',
+    description:
+      'Rendered weight of the font, in hundreds from 100 to 900 (400 is normal, 700 is bold). Requires fontFamily to be given in the same call.',
+  },
+  link: {
+    type: 'string',
+    description: 'Make the text a hyperlink to this URL. Use "NONE" to remove an existing link.',
+  },
 } as const;
 
 /**
@@ -56,6 +79,39 @@ export const toTextStyle = (args: ToolArgs): { style: slides_v1.Schema$TextStyle
   if (typeof args.backgroundColor === 'string') {
     style.backgroundColor = { opaqueColor: { rgbColor: hexToRgb(args.backgroundColor) } };
     fields.push('backgroundColor');
+  }
+
+  if (typeof args.smallCaps === 'boolean') {
+    style.smallCaps = args.smallCaps;
+    fields.push('smallCaps');
+  }
+
+  const baselineOffset = pickOptionalEnum(args.baselineOffset, BASELINE_OFFSETS, 'baselineOffset');
+  if (baselineOffset !== undefined) {
+    style.baselineOffset = baselineOffset;
+    fields.push('baselineOffset');
+  }
+
+  const fontWeight = toOptionalNumber(args.fontWeight, 'fontWeight');
+  if (fontWeight !== undefined) {
+    if (!FONT_WEIGHTS.includes(fontWeight)) {
+      throw new Error(
+        `fontWeight は ${FONT_WEIGHTS.join(' / ')} のいずれかで指定してください（受け取った値: ${String(fontWeight)}）。`,
+      );
+    }
+    if (typeof args.fontFamily !== 'string') {
+      throw new Error('fontWeight を指定するときは fontFamily も渡してください（API が組で受け取るため）。');
+    }
+    style.weightedFontFamily = { fontFamily: args.fontFamily, weight: fontWeight };
+    fields.push('weightedFontFamily');
+  }
+
+  if (typeof args.link === 'string') {
+    // 項目名だけを fields に載せて値を省くと、その項目が消える（API の field mask の流儀）
+    if (args.link.toUpperCase() !== 'NONE') {
+      style.link = { url: args.link };
+    }
+    fields.push('link');
   }
 
   return { style, fields };

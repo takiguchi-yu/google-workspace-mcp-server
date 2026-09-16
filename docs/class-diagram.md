@@ -164,6 +164,16 @@ classDiagram
         +execute(args, auth) Promise~CallToolResult~
     }
 
+    class UpdateTableCellsCommand {
+        +getToolDefinition() ToolDefinition
+        +execute(args, auth) Promise~CallToolResult~
+    }
+
+    class ConnectLineCommand {
+        +getToolDefinition() ToolDefinition
+        +execute(args, auth) Promise~CallToolResult~
+    }
+
     class SetDataValidationCommand {
         +getToolDefinition() ToolDefinition
         +execute(args, auth) Promise~CallToolResult~
@@ -266,6 +276,33 @@ classDiagram
         +toCellTextRequests(objectId, grid) Request[]
     }
 
+    class TableRange {
+        <<module>>
+        +toTableRange(range, size, name) TableRange
+        +wholeTable(size) TableRange
+        +describeTableRange(tableRange) string
+    }
+
+    class TableStyle {
+        <<module>>
+        +toTableCellProperties(args) CellPropertiesResult
+        +toTableBorderProperties(args) BorderPropertiesResult
+        +BORDER_POSITIONS
+        +CONTENT_ALIGNMENTS
+    }
+
+    class TableDimension {
+        <<module>>
+        +toDimension(value) Dimension
+        +toDimensionIndex(value, dimension, size, name) number
+    }
+
+    class ColumnLetters {
+        <<module>>
+        +columnIndexOf(letters) number
+        +columnLettersOf(index) string
+    }
+
     class TextRange {
         <<module>>
         +toTextRange(startIndex, endIndex) Range
@@ -280,6 +317,7 @@ classDiagram
         <<module>>
         +fetchElementGeometry(slides, presentationId, objectId) ElementGeometry
         +fetchLayoutPlaceholders(slides, presentationId, layoutName) PlaceholderRef[]
+        +fetchTableSize(slides, presentationId, objectId) TableSize
     }
 
     %% 関係性
@@ -323,6 +361,17 @@ classDiagram
     UpdateElementTransformCommand ..> PresentationLookup : reads current size with
     AddLineCommand ..> LineGeometry : converts two points with
     AddLineCommand ..> LineStyle : builds look with
+
+    Command <|.. UpdateTableCellsCommand : implements
+    UpdateTableCellsCommand ..> TableRange : converts A1 range with
+    UpdateTableCellsCommand ..> TableStyle : builds look with
+    UpdateTableCellsCommand ..> PresentationLookup : reads table size with
+    Command <|.. ConnectLineCommand : implements
+    ConnectLineCommand ..> LineStyle : picks routing with
+    TableRange ..> ColumnLetters : converts column letters with
+    TableDimension ..> ColumnLetters : converts column letters with
+    GridRange ..> ColumnLetters : converts column letters with
+    TableStyle ..> Color : converts color with
     ElementTransform ..> Dimensions : converts points with
     TextStyle ..> Color : converts color with
     LineStyle ..> Color : converts color with
@@ -348,23 +397,29 @@ classDiagram
     note for ElementTransform "size は変えられないので倍率を逆算する。\n鏡映を潰さないよう符号は行列式から戻す"
     note for LineGeometry "向きは scale の符号で表す"
     note for PresentationLookup "Slides で API を読むのはここだけ"
+    note for TableRange "行数・列数は必ず正の数\n開いた端は表の大きさで閉じる"
+    note for ColumnLetters "Sheets と Slides で共用"
+    note for ConnectLineCommand "接続と解除を別ツールに分ける"
 ```
 
 > **Note**: 図は代表的なクラスのみを表示しています。実際には Slides/Docs/Drive サービスや各種コマンドクラスも同様のパターンで実装されています。
 
 ## 設計上の判断
 
-| 判断                                                                                            | 理由                                                                                                                                                                                    |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `account` をコマンドではなく `ServiceManager` が扱う                                            | コマンドを増やしたときの `account` の書き忘れを構造的に防ぐため                                                                                                                         |
-| サーバーを分けず 1 プロセスで複数アカウントを持つ                                               | ツール定義がアカウント数に比例して増えず、アカウントを跨ぐ操作も 1 セッションで完結するため                                                                                             |
-| クライアントを起動時ではなく初回使用時に生成する                                                | 1 アカウントのトークン失効で全アカウントが使えなくなるのを防ぐため                                                                                                                      |
-| ラベルを主キーにし、メールアドレスを保持しない                                                  | 引数・ファイル名・ログ・エラー文面に個人情報が載らないようにするため                                                                                                                    |
-| スコープをアカウントごとに変えられるようにしない                                                | 実際に困っていない段階で設定と分岐を複雑化させないため（必要になれば `accounts.json` に任意項目を足せば後方互換のまま拡張できる）                                                       |
-| 書式ツールの範囲を A1 記法に統一し、sheetId を毎回引く                                          | 利用者と AI が読み書きするのは A1 記法であり、行列番号を外に出さないため（[ADR 0001](./adr/0001-a1-notation-for-formatting-range.md)）                                                  |
-| 色を 16 進数で受け、変換を 1 モジュールに集約する                                               | Sheets と Slides で同じ変換が重複していたため。`src/tools/shared/color.ts` に集約した                                                                                                   |
-| 条件（`BooleanCondition`）の組み立てを共通化し、使える `ConditionType` の集合は呼び出し側が渡す | 条件付き書式・入力規則・フィルタで同じ形を使うが、受け付ける型はそれぞれ別の部分集合で、用途違いは API に弾かれるため                                                                   |
-| 入力規則の設定と解除を別ツールにする                                                            | Sheets API は `rule` を省略すると解除になるが、引数の省略が破壊的操作に化けるのを避けるため                                                                                             |
-| Slides の新しいツールの寸法をポイントで受け、既存の EMU ツールは据え置く                        | 720 × 405 pt のスライドでは呼ぶ側がポイントをそのまま組み立てられる一方、既存ツールの単位を変えると黙って 72 分の 1 になるため（[ADR 0004](./adr/0004-points-for-new-slides-tools.md)） |
-| 箇条書きの解除とグループの解除を、設定とは別のツールにする                                      | 入力規則と同じく、引数の省略が破壊的操作に化けるのを避けるため                                                                                                                          |
-| Slides で API を読むのを `presentation-lookup.ts` 1 つに閉じる                                  | 寸法・行列・レイアウトの変換を純粋関数のまま保ち、テストを API 抜きで書けるようにするため                                                                                               |
+| 判断                                                                                            | 理由                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `account` をコマンドではなく `ServiceManager` が扱う                                            | コマンドを増やしたときの `account` の書き忘れを構造的に防ぐため                                                                                                                                      |
+| サーバーを分けず 1 プロセスで複数アカウントを持つ                                               | ツール定義がアカウント数に比例して増えず、アカウントを跨ぐ操作も 1 セッションで完結するため                                                                                                          |
+| クライアントを起動時ではなく初回使用時に生成する                                                | 1 アカウントのトークン失効で全アカウントが使えなくなるのを防ぐため                                                                                                                                   |
+| ラベルを主キーにし、メールアドレスを保持しない                                                  | 引数・ファイル名・ログ・エラー文面に個人情報が載らないようにするため                                                                                                                                 |
+| スコープをアカウントごとに変えられるようにしない                                                | 実際に困っていない段階で設定と分岐を複雑化させないため（必要になれば `accounts.json` に任意項目を足せば後方互換のまま拡張できる）                                                                    |
+| 書式ツールの範囲を A1 記法に統一し、sheetId を毎回引く                                          | 利用者と AI が読み書きするのは A1 記法であり、行列番号を外に出さないため（[ADR 0001](./adr/0001-a1-notation-for-formatting-range.md)）                                                               |
+| 色を 16 進数で受け、変換を 1 モジュールに集約する                                               | Sheets と Slides で同じ変換が重複していたため。`src/tools/shared/color.ts` に集約した                                                                                                                |
+| 条件（`BooleanCondition`）の組み立てを共通化し、使える `ConditionType` の集合は呼び出し側が渡す | 条件付き書式・入力規則・フィルタで同じ形を使うが、受け付ける型はそれぞれ別の部分集合で、用途違いは API に弾かれるため                                                                                |
+| 入力規則の設定と解除を別ツールにする                                                            | Sheets API は `rule` を省略すると解除になるが、引数の省略が破壊的操作に化けるのを避けるため                                                                                                          |
+| Slides の新しいツールの寸法をポイントで受け、既存の EMU ツールは据え置く                        | 720 × 405 pt のスライドでは呼ぶ側がポイントをそのまま組み立てられる一方、既存ツールの単位を変えると黙って 72 分の 1 になるため（[ADR 0004](./adr/0004-points-for-new-slides-tools.md)）              |
+| 箇条書きの解除とグループの解除を、設定とは別のツールにする                                      | 入力規則と同じく、引数の省略が破壊的操作に化けるのを避けるため                                                                                                                                       |
+| Slides で API を読むのを `presentation-lookup.ts` 1 つに閉じる                                  | 寸法・行列・レイアウトの変換を純粋関数のまま保ち、テストを API 抜きで書けるようにするため                                                                                                            |
+| 表の範囲を A1 記法で受け、行数・列数は表から引く                                                | Sheets の書式ツールと同じ流儀に揃えるため（[ADR 0001](./adr/0001-a1-notation-for-formatting-range.md)）。Slides API は行数・列数が正の数でないと受け付けないので、端が開いた指定は表の大きさで閉じる |
+| 列の記号の変換を `src/tools/shared/column-letters.ts` に集約する                                | Sheets の範囲と Slides の表の範囲で同じ 26 進数の数え方を使うため。色の変換を集約したのと同じ理由                                                                                                    |
+| 線と図形の接続と、その解除を別ツールにする                                                      | 接続の指定を空にすると解除になる API の流儀をそのまま出すと、引数の書き忘れが解除に化けるため                                                                                                        |
